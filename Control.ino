@@ -1,5 +1,5 @@
 #define ZAXISSPEED 2000
-#define HOMINGSPEED 5000
+#define HOMINGSPEED 8000
 
 // End switch states
 volatile boolean ES_ZERO_X_STATE = false;

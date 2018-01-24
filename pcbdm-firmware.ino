@@ -2,7 +2,9 @@
 #include <AMIS30543.h>
 #include <PinChangeInterrupt.h>
 
-#define steps_um 1
+#define steps_um_x 1.94
+#define steps_um_y 1.94
+#define steps_um_z 1
 
 // Motors
 #define DIRPIN_X     6

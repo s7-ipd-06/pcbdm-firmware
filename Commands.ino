@@ -51,33 +51,19 @@ void processCommand() {
       long distanceX = (long)parseNumber('X', 0);
       long distanceY = (long)parseNumber('Y', 0);
       long distanceZ = (long)parseNumber('Z', 0);
+
+      distanceX *= steps_um_x;
+      distanceY *= steps_um_y;
+      distanceZ *= steps_um_z;
       
-      if(positioningType == 0) { // Absolute
-        if(strchr(buff, 'X') != NULL) {
-          distanceX *= steps_um;
-          setXSetpoint(distanceX);
-        }
-        if(strchr(buff, 'Y') != NULL) {
-          distanceY *= steps_um;
-          setYSetpoint(distanceY);
-        }
-        if(strchr(buff, 'Z') != NULL) {
-          distanceZ *= steps_um;
-          setZSetpoint(distanceZ);
-        }
-      } else { // Relative
-        if(strchr(buff, 'X') != NULL) {
-          distanceX *= steps_um;
-          setXSetpoint(getXPos()+distanceX);
-        }
-        if(strchr(buff, 'Y') != NULL) {
-          distanceY *= steps_um;
-          setYSetpoint(getYPos()+distanceY);
-        }
-        if(strchr(buff, 'Z') != NULL) {
-          distanceZ *= steps_um;
-          setZSetpoint(getZPos()+distanceZ);
-        }
+      if(strchr(buff, 'X') != NULL) {
+        setXSetpoint(positioningType == 0 ? distanceX : getXPos()+distanceX);
+      }
+      if(strchr(buff, 'Y') != NULL) {
+        setYSetpoint(positioningType == 0 ? distanceY : getXPos()+distanceY);
+      }
+      if(strchr(buff, 'Z') != NULL) {
+        setZSetpoint(positioningType == 0 ? distanceZ : getXPos()+distanceZ);
       }
       
       break;}
