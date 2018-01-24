@@ -1,10 +1,10 @@
 #include <SPI.h>
 #include <AMIS30543.h>
-#include <PinChangeInt.h>
-
+#include <PinChangeInterrupt.h>
 
 #define steps_um 1
-//######MOTORS######
+
+// Motors
 #define DIRPIN_X     6
 #define PULSEPIN_X   5
 
@@ -14,7 +14,7 @@
 #define DIRPIN_Z     3
 #define PULSEPIN_Z   2
 
-
+// SPI chip select
 #define SS_X         7
 #define SS_Y         10
 #define SS_Z         4
@@ -69,7 +69,7 @@ unsigned int buffI;
 boolean endStr = false;
 
 void loop(){
-    controlLoop();
+  controlLoop();
   //showinfo();
   //showinfo();
   //showAllow();

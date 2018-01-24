@@ -40,10 +40,6 @@ void setSpindleOff() {
   Serial.println("ok Spindle Off");
 }
 
-
-
-
-
 bool positioningType = 0; // 0 = absolute, 1 = relative
 
 void processCommand() {
@@ -69,9 +65,7 @@ void processCommand() {
           distanceZ *= steps_um;
           setZSetpoint(distanceZ);
         }
-        
       } else { // Relative
-
         if(strchr(buff, 'X') != NULL) {
           distanceX *= steps_um;
           setXSetpoint(getXPos()+distanceX);
@@ -84,7 +78,6 @@ void processCommand() {
           distanceZ *= steps_um;
           setZSetpoint(getZPos()+distanceZ);
         }
-        
       }
       
       break;}
@@ -99,21 +92,19 @@ void processCommand() {
       Serial.println("ok");
       positioningType = 1;
       break;
-   
   }
 
   int cmdM = parseNumber('M', -1);
   switch(cmdM) {
-    case 3: //Spindle on
+    case 3: // Spindle on
       setSpindleOn();
       break;
-    case 5:
+    case 5: // Spindle off
       setSpindleOff();
       break;
     case 203: // Set maximum feedrate
       Serial.println("ok");
       break;
-   
   }
 
   // Custom commands
@@ -129,20 +120,19 @@ void processCommand() {
       Serial.println(getYPos());
       Serial.println("ok");
       break;
-    case 2: // Get Y position
+    case 2: // Get Z position
       //Serial.println(buff);
       Serial.println(getZPos());
       Serial.println("ok");
       break;
-    case 3:
-      Serial.println("ok Locking X and Y Axis");
+    case 3: // Lock X & Y
+      Serial.println("ok Locking X & Y axis");
       lock(true);
       break;
-    case 4:
-      Serial.println("ok realsing lock X and Y Axis");
+    case 4: // Unlock X & Y
+      Serial.println("ok Unlocking X & Y axis");
       lock(false);
-      break;
-    
+      break; 
   }
 }
 

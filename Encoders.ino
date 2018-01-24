@@ -8,7 +8,6 @@ void initEncoders(){
   attachInterrupt(digitalPinToInterrupt(ENC_X_B), encXB, CHANGE);
   attachInterrupt(digitalPinToInterrupt(ENC_Y_A), encYA, CHANGE);
   attachInterrupt(digitalPinToInterrupt(ENC_Y_B), encYB, CHANGE);
-  
 }
 
 volatile long pos_X;
@@ -24,47 +23,46 @@ long getYPos(){
 long getZPos(){
   return pos_Z;
 }
-void encXA(){
-  digitalRead(ENC_X_A) == digitalRead(ENC_X_B)?pos_X++:pos_X--;
+void encXA() {
+  digitalRead(ENC_X_A) == digitalRead(ENC_X_B) ? pos_X++ : pos_X--;
   if(ES_ZERO_X_STATE){
-      pos_X = 0;
+    pos_X = 0;
   }
 }
-void encXB(){
-  digitalRead(ENC_X_A) != digitalRead(ENC_X_B)?pos_X++:pos_X--;
+void encXB() {
+  digitalRead(ENC_X_A) != digitalRead(ENC_X_B) ? pos_X++ : pos_X--;
   if(ES_ZERO_X_STATE){
-      pos_X = 0;
+    pos_X = 0;
   }
 }
-void encYA(){
-  digitalRead(ENC_Y_A) == digitalRead(ENC_Y_B)?pos_Y++:pos_Y--;
+void encYA() {
+  digitalRead(ENC_Y_A) == digitalRead(ENC_Y_B) ? pos_Y++ : pos_Y--;
   if(ES_ZERO_Y_STATE){
-      pos_Y = 0;
+    pos_Y = 0;
   }
 }
-void encYB(){
-  digitalRead(ENC_Y_A) != digitalRead(ENC_Y_B)?pos_Y++:pos_Y--;
+void encYB() {
+  digitalRead(ENC_Y_A) != digitalRead(ENC_Y_B) ? pos_Y++ : pos_Y--;
   if(ES_ZERO_Y_STATE){
-      pos_Y = 0;
+    pos_Y = 0;
   }
 }
 void encZ(boolean dec){
-  if(dec){
+  if(dec) {
     pos_Z--;
-  }else{
+  } else {
     pos_Z++;
   }
   if(ES_ZERO_Z_STATE){
     pos_Z=0;
-  }
-  
+  } 
 }
-void homeXEncoder(){
+void homeXEncoder() {
   pos_X = 0;
 }
-void homeYEncoder(){
+void homeYEncoder() {
   pos_Y = 0;
 }
-void homeZEncoder(){
+void homeZEncoder() {
   pos_Z = 0;
 }

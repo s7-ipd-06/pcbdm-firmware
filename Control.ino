@@ -1,8 +1,7 @@
-
 #define ZAXISSPEED 2000
 #define HOMINGSPEED 5000
 
-
+// End switch states
 volatile boolean ES_ZERO_X_STATE = false;
 volatile boolean ES_MAX_X_STATE = false;
 volatile boolean ES_ZERO_Y_STATE = false;
@@ -10,6 +9,7 @@ volatile boolean ES_MAX_Y_STATE = false;
 volatile boolean ES_ZERO_Z_STATE = false;
 volatile boolean ES_MAX_Z_STATE = false;
 
+// Setpoints
 volatile long setPoint_X;
 volatile long setPoint_Y;
 volatile long setPoint_Z;// 1 for down -1 for up 0 for still
@@ -17,23 +17,24 @@ volatile long setPoint_Z;// 1 for down -1 for up 0 for still
 volatile boolean homing = false;
 volatile boolean stable = false;
 
-void setUnstable(){
-   stable=false; 
+void setUnstable() {
+  stable = false; 
 }
-void controlLoop(){
-  if(homing){
-    if(!ES_ZERO_Z_STATE){
+
+void controlLoop() {
+  if(homing) {
+    if(!ES_ZERO_Z_STATE) {
       lock(true);
-    }else{
+    } else {
       lock(false);
     }
     
-    if(ES_ZERO_X_STATE && ES_ZERO_Y_STATE && ES_ZERO_Z_STATE){
+    if(ES_ZERO_X_STATE && ES_ZERO_Y_STATE && ES_ZERO_Z_STATE) {
       Serial.println("ok");
       stable = true;
       homing = false;
       //Serial.println("Homing done");
-    }else{
+    } else {
       setSpeedX(-HOMINGSPEED);
       setSpeedY(-HOMINGSPEED);
       setSpeedZ(-ZAXISSPEED);
@@ -41,46 +42,40 @@ void controlLoop(){
     return;
   }
   
-  
   long error_X = setPoint_X - getXPos();
-  if(error_X>1000){
+  if(error_X>1000) {
     setSpeedX(10000);
-    
-  }else{
-   if(error_X<-1000){
-    setSpeedX(-10000);
-    
-   }else{
-     
-       int out_X = error_X*10;
-       setSpeedX(out_X);
-     
-    
-   } 
-    
+  } else{ 
+    if(error_X<-1000) {
+      setSpeedX(-10000);
+    } else {
+      int out_X = error_X * 10;
+      setSpeedX(out_X);
+    }
   }
+  
   long error_Y = setPoint_Y - getYPos();
-  if(error_Y>1000){
+  if(error_Y>1000) {
     setSpeedY(10000);
-  }else{
-   if(error_Y<-1000){
-    setSpeedY(-10000);
-   }else{
-    int out_Y = error_Y*10;
-    setSpeedY(out_Y);
-   } 
+  } else {
+    if(error_Y<-1000){
+      setSpeedY(-10000);
+    } else {
+      int out_Y = error_Y * 10;
+      setSpeedY(out_Y);
+    } 
   }
   
   long error_Z = setPoint_Z - getZPos();
-  if(error_Z>1000){
+  if(error_Z>1000) {
     setSpeedZ(10000);
-  }else{
-   if(error_Z<-1000){
-    setSpeedZ(-10000);
-   }else{
-    int out_Z = error_Z*10;
-    setSpeedZ(out_Z);
-   } 
+  } else {
+    if(error_Z<-1000) {
+      setSpeedZ(-10000);
+    } else {
+      int out_Z = error_Z * 10;
+      setSpeedZ(out_Z);
+    } 
   }
   /*
   if(setPoint_Z <0){
@@ -94,33 +89,29 @@ void controlLoop(){
   }*/
 }
 
-
 volatile int stable_X = 0;
 volatile int stable_Y = 0;
 volatile int stable_Z = 0;
 
 int threshold = 200;
-void stableCheck(){  //this function is called every ~1ms
-  if(homing){
-    
+void stableCheck() {  //this function is called every ~1ms
+  if(homing) {
     return;
   }
-  if(getXPos() == setPoint_X || LOCKED){
+  if(getXPos() == setPoint_X || LOCKED) {
     stable_X++;
     if(stable_X>threshold){
        stable_X=threshold; 
     }
-    
-  }else{
+  } else {
     stable_X = 0;
   }
-  if(getYPos() == setPoint_Y || LOCKED){
+  if(getYPos() == setPoint_Y || LOCKED) {
     stable_Y++;
     if(stable_Y>threshold){
        stable_Y=threshold; 
     }
-  }
-  else{
+  } else {
     stable_Y = 0;
   }
   
@@ -129,8 +120,7 @@ void stableCheck(){  //this function is called every ~1ms
     if(stable_Z>threshold){
        stable_Z=threshold; 
     }
-  }
-  else{
+  } else {
     stable_Z = 0;
   }
   /*
@@ -154,7 +144,6 @@ void homeAxis(){
   setPoint_X = 0;
   setPoint_Y = 0;
   setPoint_Z = 0;
-  
 }
 
 void setSetPointX(long s){
@@ -178,9 +167,6 @@ void drillUp(){
   setPoint_Z = -1;
   stable = false;
 }
-
-
-
 
 void esZeroXActivated(){
   if(getSpeedX()<0){

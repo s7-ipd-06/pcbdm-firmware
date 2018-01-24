@@ -1,4 +1,4 @@
-void initSwitches(){
+void initSwitches() {
   //X
   pinMode(ES_ZERO_X, INPUT);     
   digitalWrite(ES_ZERO_X, HIGH); 
@@ -8,7 +8,7 @@ void initSwitches(){
   //Y
   pinMode(ES_ZERO_Y, INPUT);     
   digitalWrite(ES_ZERO_Y, HIGH); 
- pinMode(ES_MAX_Y, INPUT);     
+  pinMode(ES_MAX_Y, INPUT);     
   digitalWrite(ES_MAX_Y, HIGH); 
   
   //Z
@@ -64,15 +64,12 @@ void endSwitchRead(){
     ES_MAX_Z_STATE = E6;
     esMaxZToggle();
   }
-  
-  
 }
 
 void esZeroXToggle(){
   if(ES_ZERO_X_STATE){
     esZeroXActivated();
   }
-
 }
 void esMaxXToggle(){
   if(ES_MAX_X_STATE){

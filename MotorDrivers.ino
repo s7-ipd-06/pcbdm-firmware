@@ -20,7 +20,5 @@ void initDrivers(){
   stepper_Z.setCurrentMilliamps(300);
   stepper_Z.setStepMode(8);
   stepper_Z.enableDriver();
-  
-  
 }
 
