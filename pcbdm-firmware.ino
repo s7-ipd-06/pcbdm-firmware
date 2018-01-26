@@ -1,68 +1,66 @@
+#include "pcbdm-firmware.h"
+
+// Include declarations of functions that are used in this file
+#include "commands.h"
+#include "encoders.h"
+#include "motorcontrol.h"
+
+// External libraries
 #include <SPI.h>
 #include <AMIS30543.h>
-#include <PinChangeInterrupt.h>
 
-#define steps_um_x 1.94
-#define steps_um_y 1.94
-#define steps_um_z 1
-
-// Motors
-#define DIRPIN_X     6
-#define PULSEPIN_X   5
-
-#define DIRPIN_Y     9
-#define PULSEPIN_Y   8
-
-#define DIRPIN_Z     3
-#define PULSEPIN_Z   2
-
-// SPI chip select
-#define SS_X         7
-#define SS_Y         10
-#define SS_Z         4
-
-#define RELAY        49
-/* SPI
-MOSI                 51
-MISO                 50
-CLK                  52
-*/
+// Global state initialization
+bool positioningType = 0; // 0 = absolute, 1 = relative
 
 AMIS30543 stepper_X;
 AMIS30543 stepper_Y;
 AMIS30543 stepper_Z;
-//####################
-//#####ENCODERS######
-#define ENC_X_A      18
-#define ENC_X_B      19
 
-#define ENC_Y_A      20
-#define ENC_Y_B      21
+void initDrivers() {
+  SPI.begin();
+  
+  stepper_X.init(_SS_X);
+  stepper_Y.init(_SS_Y);
+  stepper_Z.init(_SS_Z);
+  delay(1);
+  
+  stepper_X.resetSettings();
+  stepper_X.setCurrentMilliamps(1260);
+  stepper_X.setStepMode(8);
+  stepper_X.enableDriver();
+  
+  stepper_Y.resetSettings();
+  stepper_Y.setCurrentMilliamps(1260);
+  stepper_Y.setStepMode(8);
+  stepper_Y.enableDriver();
+  
+  stepper_Z.resetSettings();
+  stepper_Z.setCurrentMilliamps(300);
+  stepper_Z.setStepMode(8);
+  stepper_Z.enableDriver();
+}
 
-//#####ENDSWITCHES#####     Connect these without 5v, just pullup the signal with a pullup resistor and connect ground.
-#define ES_ZERO_X    16
-#define ES_MAX_X     17
-
-#define ES_ZERO_Y    14
-#define ES_MAX_Y     15
-
-#define ES_ZERO_Z    12
-#define ES_MAX_Z     13
-//#####################
-
-void setup(){
-  setTimers(); //Timers tab
+void setup() {
   Serial.begin(115200);
-  initDrivers();
-  initSwitches();
-  initEncoders();
-  pinMode(RELAY, OUTPUT);
-  digitalWrite(RELAY, LOW);
-   pinMode(A4, OUTPUT);
-   //pinMode(2,INPUT);
-   Serial.println("Ready");
-}//end setup
 
+  // Initialize pins
+  pinMode(_SPINDLE, OUTPUT);
+  digitalWrite(_SPINDLE, LOW);
+
+  pinMode(_ES_ZERO_X, INPUT_PULLUP);
+  pinMode(_ES_MAX_X, INPUT_PULLUP);
+  pinMode(_ES_ZERO_Y, INPUT_PULLUP);
+  pinMode(_ES_MAX_Y, INPUT_PULLUP);
+  pinMode(_ES_ZERO_Z, INPUT_PULLUP);
+  pinMode(_ES_MAX_Z, INPUT_PULLUP);
+  
+  delay(3000);
+  Serial.println("Ready");
+  
+  initTimers();
+  initEncoders();
+  initDrivers();
+}
 
 #define BUFFERSIZE 100
 char buff[BUFFERSIZE];
@@ -70,11 +68,8 @@ unsigned int buffI;
 
 boolean endStr = false;
 
-void loop(){
-  controlLoop();
-  //showinfo();
-  //showinfo();
-  //showAllow();
+void loop() {
+  // Read serialport
   if(Serial.available()) {
     char chr = Serial.read();
     
@@ -83,7 +78,7 @@ void loop(){
       byte msgLength = buffI-1;
 
       if(checksum == msgLength) {
-        processCommand();
+        processCommand(buff);
         //Serial.println("ok: checksum correct");
       } else {
         Serial.println("err: checksum error");
