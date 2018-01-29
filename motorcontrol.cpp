@@ -72,6 +72,8 @@ volatile long targetSpeed_z = 0;
 volatile bool currentDirection_x = false;
 volatile bool currentDirection_y = false;
 volatile bool currentDirection_z = false;
+volatile uint8_t stable_x = 0;
+volatile uint8_t stable_y = 0;
 
 // Pulse intervals, a max value of 0xFFFFFF/4294967295 = ~24 hours between a step which is used as speed 0
 volatile unsigned long cmp_x = 0xFFFFFF; // * 10 * 2 us = time between pulse/step
@@ -87,7 +89,7 @@ volatile unsigned long pc_z;
 // Timer 1: 1 KHz
 ISR(TIMER1_COMPA_vect) {
   // Check end switches and adjust speeds & position accordingly
-  //checkSwitches();
+  checkSwitches();
 
   // Position control by altering the speeds
   positionControl();
@@ -162,22 +164,25 @@ void checkSwitches() {
 
   if(es_x_min) {
     currentPosition_x = 0;
-    targetSpeed_x = max(0, targetSpeed_x);  // Stop immediately
-    currentSpeed_x = max(0, currentSpeed_x);
+    targetPosition_x = 0;
+    targetSpeed_x = max(0, targetSpeed_x);  // Dont allow negative speed
+    currentSpeed_x = max(0, currentSpeed_x); // Stop immediately
     //Serial.println("End switch X hit");
   }
 
   if(es_y_min) {
     currentPosition_y = 0;
-    targetSpeed_y = max(0, targetSpeed_y);  // Stop immediately
-    currentSpeed_y = max(0, currentSpeed_y);
+    targetPosition_y = 0;
+    targetSpeed_y = max(0, targetSpeed_y);  // Dont allow negative speed
+    currentSpeed_y = max(0, currentSpeed_y); // Stop immediately
     //Serial.println("End switch Y hit");
   }
 
   if(es_z_min) {
     currentPosition_z = 0;
-    targetSpeed_z = max(0, targetSpeed_z);  // Stop immediately
-    currentSpeed_z = max(0, currentSpeed_z);
+    targetPosition_z = 0;
+    targetSpeed_z = max(0, targetSpeed_z);  // Dont allow negative speed
+    currentSpeed_z = max(0, currentSpeed_z); // Stop immediately
     //Serial.println("End switch Z hit");
   }
 }
@@ -186,10 +191,14 @@ void positionControl() {
   // X-axis P-controller
   long error_x = targetPosition_x - currentPosition_x;
   targetSpeed_x = error_x * CONTROLLER_P_X;
+  if(error_x == 0) stable_x++; // Stable check
+  if(stable_x > STABLECHECKS) targetSpeed_x = 0; // Set speed to zero if stable
 
   // Y-axis P-controller
   long error_y = targetPosition_y - currentPosition_y;
   targetSpeed_y = error_y * CONTROLLER_P_Y;
+  if(error_y == 0) stable_y++; // Stable check
+  if(stable_y > STABLECHECKS) targetSpeed_y = 0; // Set speed to zero if stable
 
   // Z-axis no controller, max speed used
   long error_z = targetPosition_z - currentPosition_z;

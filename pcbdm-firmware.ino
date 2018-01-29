@@ -55,11 +55,12 @@ void setup() {
   pinMode(_ES_MAX_Z, INPUT_PULLUP);
   
   delay(3000);
-  Serial.println("Ready");
   
   initTimers();
   initEncoders();
   initDrivers();
+  
+  Serial.println("Ready");
 }
 
 #define BUFFERSIZE 100

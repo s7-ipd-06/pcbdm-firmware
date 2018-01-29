@@ -1,7 +1,7 @@
 #ifndef MOTORCONTROL_H
 #define MOTORCONTROL_H
 
-// Global state
+// Public functions
 void initTimers();
 
 #endif

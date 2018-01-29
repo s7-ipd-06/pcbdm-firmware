@@ -1,8 +1,5 @@
 #include "pcbdm-firmware.h" // Contains the global state that is mutated by functions in this file
 
-// Private functions
-void setSpindle(bool state);
-
 /**
  * Look for character /code/ in the buffer and read the float that immediately follows it.
  * @return the value found.  If nothing is found, /val/ is returned.
