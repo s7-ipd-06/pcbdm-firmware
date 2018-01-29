@@ -6,5 +6,6 @@ void processCommand(char * buff);
 
 // Private functions
 void setSpindle(bool state);
+void homeAxis();
 
 #endif

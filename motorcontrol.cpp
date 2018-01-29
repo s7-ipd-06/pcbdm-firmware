@@ -183,23 +183,38 @@ void checkSwitches() {
 
   if(es_x_min) {
     currentPosition_x = 0;
-    targetPosition_x = 0;
     targetSpeed_x = max(0, targetSpeed_x);  // Dont allow negative speed
-    //Serial.println("End switch X hit");
+    //Serial.println("Min switch X hit");
+  }
+
+  if(es_x_max) {
+    currentPosition_x = 0;
+    targetSpeed_x = min(0, targetSpeed_x);  // Dont allow negative speed
+    //Serial.println("Max switch X hit");
   }
 
   if(es_y_min) {
     currentPosition_y = 0;
-    targetPosition_y = 0;
     targetSpeed_y = max(0, targetSpeed_y);  // Dont allow negative speed
-    //Serial.println("End switch Y hit");
+    //Serial.println("Min switch Y hit");
+  }
+
+  if(es_y_max) {
+    currentPosition_y = 0;
+    targetSpeed_y = min(0, targetSpeed_y);  // Dont allow negative speed
+    //Serial.println("Max switch Y hit");
   }
 
   if(es_z_min) {
     currentPosition_z = 0;
-    targetPosition_z = 0;
     targetSpeed_z = max(0, targetSpeed_z);  // Dont allow negative speed
-    //Serial.println("End switch Z hit");
+    //Serial.println("Min switch Z hit");
+  }
+
+  if(es_z_max) {
+    currentPosition_z = 0;
+    targetSpeed_z = min(0, targetSpeed_z);  // Dont allow negative speed
+    //Serial.println("Max switch Z hit");
   }
 }
 
