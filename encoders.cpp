@@ -1,5 +1,7 @@
 #include "pcbdm-firmware.h" // Contains the global state that is mutated by functions in this file
 
+#include "encoders.h"
+
 // External libraries
 #include <PinChangeInterrupt.h>
 
@@ -39,18 +41,18 @@ void encXB() {
 }
 void encYA() {
   #if ENC_Y_INVERT
-    enc_y_a_v = !digitalRead(_ENC_y_A);
+    enc_y_a_v = !digitalRead(_ENC_Y_A);
   #else
-    enc_y_a_v = digitalRead(_ENC_y_A);
+    enc_y_a_v = digitalRead(_ENC_Y_A);
   #endif
 
   currentPosition_y += enc_y_a_v == enc_y_b_v ? 1 : -1;
 }
 void encYB() {
   #if ENC_Y_INVERT
-    enc_y_a_v = !digitalRead(_ENC_y_A);
+    enc_y_a_v = !digitalRead(_ENC_Y_A);
   #else
-    enc_y_a_v = digitalRead(_ENC_y_A);
+    enc_y_a_v = digitalRead(_ENC_Y_A);
   #endif
 
   currentPosition_y += enc_y_a_v != enc_y_b_v ? 1 : -1;

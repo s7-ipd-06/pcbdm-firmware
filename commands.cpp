@@ -1,5 +1,7 @@
 #include "pcbdm-firmware.h" // Contains the global state that is mutated by functions in this file
 
+#include "commands.h"
+
 /**
  * Look for character /code/ in the buffer and read the float that immediately follows it.
  * @return the value found.  If nothing is found, /val/ is returned.
@@ -46,6 +48,7 @@ void processCommand(char * buff) {
       break;}
     case 28: //Home axis
       homeAxis();
+      Serial.println("ok");
       break;
     case 90: // Set positioning type to absolute
       Serial.println("ok");

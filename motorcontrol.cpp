@@ -1,5 +1,7 @@
 #include "pcbdm-firmware.h" // Contains the global state that is mutated by functions in this file
 
+#include "motorcontrol.h"
+
 void initTimers() {
   cli();//stop interrupts
   //Don't use timer0, It is reserves for delay() and millis() and interferes with the serial read.
@@ -93,7 +95,7 @@ ISR(TIMER1_COMPA_vect) {
   // Change speed, accelerate/decelerate to reach target speed
   if(currentSpeed_x != targetSpeed_x) {
     bool speedChangeDirection = targetSpeed_x > currentSpeed_x;
-    bool accelerating = currentSpeed_x > 0 : speedChangeDirection ? -speedChangeDirection;
+    bool accelerating = currentSpeed_x > 0 ? speedChangeDirection : -speedChangeDirection;
 
     long deltaSpeed = targetSpeed_x - currentSpeed_x;
     deltaSpeed = accelerating ? min(deltaSpeed, acceleration_x) : deltaSpeed; // Apply acceleration & no deceleration
@@ -121,7 +123,7 @@ ISR(TIMER1_COMPA_vect) {
   // Change speed, accelerate/decelerate to reach target speed
   if(currentSpeed_y != targetSpeed_y) {
     bool speedChangeDirection = targetSpeed_y > currentSpeed_y;
-    bool accelerating = currentSpeed_y > 0 : speedChangeDirection ? -speedChangeDirection;
+    bool accelerating = currentSpeed_y > 0 ? speedChangeDirection : -speedChangeDirection;
 
     long deltaSpeed = targetSpeed_y - currentSpeed_y;
     deltaSpeed = accelerating ? min(deltaSpeed, acceleration_y) : deltaSpeed; // Apply acceleration & no deceleration
@@ -148,7 +150,7 @@ ISR(TIMER1_COMPA_vect) {
   // Change speed, accelerate/decelerate to reach target speed
   if(currentSpeed_z != targetSpeed_z) {
     bool speedChangeDirection = targetSpeed_z > currentSpeed_z;
-    bool accelerating = currentSpeed_z > 0 : speedChangeDirection ? -speedChangeDirection;
+    bool accelerating = currentSpeed_z > 0 ? speedChangeDirection : -speedChangeDirection;
 
     long deltaSpeed = targetSpeed_z - currentSpeed_z;
     deltaSpeed = accelerating ? min(deltaSpeed, acceleration_z) : deltaSpeed; // Apply acceleration & no deceleration
@@ -225,7 +227,9 @@ void positionControl() {
   if(error_x <= STABLE_MAX_ERROR) {
     if(stable_x < STABLECHECKS) stable_x++;
     if(stable_x >= STABLECHECKS) targetSpeed_x = 0; // Set speed to zero if stable
-  } else if(error_x > UNSTABLE_MIN_ERROR) stable_x = 0; // Set to unstable if error is too big
+  } else if(error_x > UNSTABLE_MIN_ERROR) {
+    stable_x = 0; // Set to unstable if error is too big
+  }
 
   // Y-axis P-controller
   long error_y = targetPosition_y - currentPosition_y;
@@ -233,7 +237,9 @@ void positionControl() {
   if(error_y <= STABLE_MAX_ERROR) {
     if(stable_y < STABLECHECKS) stable_y++;
     if(stable_y >= STABLECHECKS) targetSpeed_y = 0; // Set speed to zero if stable
-  } else if(error_y > UNSTABLE_MIN_ERROR) stable_y = 0; // Set to unstable if error is too big
+  } else if(error_y > UNSTABLE_MIN_ERROR) {
+    stable_y = 0; // Set to unstable if error is too big
+  }
 
   // Z-axis no controller, max speed used
   long error_z = targetPosition_z - currentPosition_z;
@@ -246,7 +252,7 @@ void positionControl() {
   // Print "ok" to serial if all axis are stable
   if(!reportedStable) {
     if(stable_x >= STABLECHECKS && stable_y >= STABLECHECKS && error_z == 0) {
-      Serial.println("ok")
+      Serial.println("ok");
       reportedStable = true;
     }
   }
