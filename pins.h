@@ -29,9 +29,9 @@ CLK                  52
 #define _ENC_Y_B      21
 
 // End switches     Connect these without 5v, just pullup the signal with a pullup resistor and connect ground.
-#define _ES_ZERO_X    16
+#define _ES_MIN_X     16
 #define _ES_MAX_X     17
-#define _ES_ZERO_Y    14
+#define _ES_MIN_Y     14
 #define _ES_MAX_Y     15
-#define _ES_ZERO_Z    12
+#define _ES_MIN_Z     12
 #define _ES_MAX_Z     13

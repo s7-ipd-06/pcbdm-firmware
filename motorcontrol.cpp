@@ -69,9 +69,9 @@ volatile long targetSpeed_z = 0;
 volatile bool currentDirection_x = false;
 volatile bool currentDirection_y = false;
 volatile bool currentDirection_z = false;
-volatile uint8_t stable_x = 0;
-volatile uint8_t stable_y = 0;
-volatile bool reportedStable = false;
+volatile uint8_t stable_x = 999;
+volatile uint8_t stable_y = 999;
+volatile bool reportedStable = true;
 
 // Pulse intervals, a max value of 0xFFFFFF/4294967295 = ~24 hours between a step which is used as speed 0
 volatile unsigned long cmp_x = 0xFFFFFF; // * 10 * 2 us = time between pulse/step
@@ -110,7 +110,6 @@ ISR(TIMER1_COMPA_vect) {
     // Change direction if needed
     if(currentDirection_x != newDirection) {
       currentDirection_x = newDirection;
-      digitalWrite(_DIR_X, newDirection);
 
       #if MOTOR_X_INVERT
         digitalWrite(_DIR_X, !newDirection);
@@ -176,68 +175,72 @@ ISR(TIMER1_COMPA_vect) {
 }
 
 void checkSwitches() {
-  boolean es_x_min = !digitalRead(_ES_ZERO_X);  //Neg
-  boolean es_x_max = !digitalRead(_ES_MAX_X);   //Neg
-  boolean es_y_min = !digitalRead(_ES_ZERO_Y);  //Neg
-  boolean es_y_max = !digitalRead(_ES_MAX_Y);   //Neg
-  boolean es_z_min = !digitalRead(_ES_ZERO_Z); //Neg
-  boolean es_z_max = digitalRead(_ES_MAX_Z);
+  bool es_x_min = !digitalRead(_ES_MIN_X);  //Neg
+  bool es_x_max = !digitalRead(_ES_MAX_X);   //Neg
+  bool es_y_min = !digitalRead(_ES_MIN_Y);  //Neg
+  bool es_y_max = !digitalRead(_ES_MAX_Y);   //Neg
+  bool es_z_min = !digitalRead(_ES_MIN_Z); //Neg
+  bool es_z_max = digitalRead(_ES_MAX_Z);
 
   if(es_x_min) {
     currentPosition_x = 0;
+    if(targetSpeed_x != 0) Serial.println("Min switch X hit");
     targetSpeed_x = max(0, targetSpeed_x);  // Dont allow negative speed
-    //Serial.println("Min switch X hit");
   }
 
   if(es_x_max) {
     currentPosition_x = 0;
+    if(targetSpeed_x != 0) Serial.println("Max switch X hit");
     targetSpeed_x = min(0, targetSpeed_x);  // Dont allow negative speed
-    //Serial.println("Max switch X hit");
   }
 
   if(es_y_min) {
     currentPosition_y = 0;
+    if(targetSpeed_y != 0) Serial.println("Min switch Y hit");
     targetSpeed_y = max(0, targetSpeed_y);  // Dont allow negative speed
-    //Serial.println("Min switch Y hit");
   }
 
   if(es_y_max) {
     currentPosition_y = 0;
+    if(targetSpeed_y != 0) Serial.println("Max switch Y hit");
     targetSpeed_y = min(0, targetSpeed_y);  // Dont allow negative speed
-    //Serial.println("Max switch Y hit");
   }
 
   if(es_z_min) {
     currentPosition_z = 0;
+    if(targetSpeed_z != 0) Serial.println("Min switch Z hit");
     targetSpeed_z = max(0, targetSpeed_z);  // Dont allow negative speed
-    //Serial.println("Min switch Z hit");
   }
 
   if(es_z_max) {
     currentPosition_z = 0;
+    if(targetSpeed_z != 0) Serial.println("Max switch Z hit");
     targetSpeed_z = min(0, targetSpeed_z);  // Dont allow negative speed
-    //Serial.println("Max switch Z hit");
   }
 }
 
 void positionControl() {  
   // X-axis P-controller
   long error_x = targetPosition_x - currentPosition_x;
-  targetSpeed_x = error_x * CONTROLLER_P_X;
   if(error_x <= STABLE_MAX_ERROR) {
     if(stable_x < STABLECHECKS) stable_x++;
-    if(stable_x >= STABLECHECKS) targetSpeed_x = 0; // Set speed to zero if stable
+    if(stable_x >= STABLECHECKS) {
+      targetPosition_x = currentPosition_x;
+    } // Set speed to zero if stable
   } else if(error_x > UNSTABLE_MIN_ERROR) {
+    targetSpeed_x = error_x * CONTROLLER_P_X;
     stable_x = 0; // Set to unstable if error is too big
   }
 
   // Y-axis P-controller
   long error_y = targetPosition_y - currentPosition_y;
-  targetSpeed_y = error_y * CONTROLLER_P_Y;
   if(error_y <= STABLE_MAX_ERROR) {
     if(stable_y < STABLECHECKS) stable_y++;
-    if(stable_y >= STABLECHECKS) targetSpeed_y = 0; // Set speed to zero if stable
+    if(stable_y >= STABLECHECKS) {
+      targetPosition_y = currentPosition_y;
+    }
   } else if(error_y > UNSTABLE_MIN_ERROR) {
+    targetSpeed_y = error_y * CONTROLLER_P_Y;
     stable_y = 0; // Set to unstable if error is too big
   }
 

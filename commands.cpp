@@ -22,6 +22,8 @@ float parseNumber(char * buff, char code, float val) {
 void processCommand(char * buff) {
   int cmdG = parseNumber(buff, 'G', -1);
   
+  int unknownCounter = 0;
+
   switch(cmdG) {
     case 0:{
       //Serial.println(buff);
@@ -59,7 +61,7 @@ void processCommand(char * buff) {
       positioningType = 1;
       break;
     default:
-      Serial.println("ok: Command does not exist");
+      unknownCounter++;
       break;
   }
 
@@ -84,7 +86,7 @@ void processCommand(char * buff) {
       Serial.println("ok: Not implemented");
       break;
     default:
-      Serial.println("ok: Command does not exist");
+      unknownCounter++;
       break;
   }
 
@@ -96,8 +98,12 @@ void processCommand(char * buff) {
       Serial.println("ok: Command does not exist");
       break;
     default:
-      Serial.println("ok: Command does not exist");
+      unknownCounter++;
       break;
+  }
+
+  if(unknownCounter == 3) {
+    Serial.println("ok: Command does not exist");
   }
 }
 

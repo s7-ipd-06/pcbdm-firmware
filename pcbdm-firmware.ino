@@ -47,14 +47,14 @@ void setup() {
   pinMode(_SPINDLE, OUTPUT);
   digitalWrite(_SPINDLE, LOW);
 
-  pinMode(_ES_ZERO_X, INPUT_PULLUP);
+  pinMode(_ES_MIN_X, INPUT_PULLUP);
   pinMode(_ES_MAX_X, INPUT_PULLUP);
-  pinMode(_ES_ZERO_Y, INPUT_PULLUP);
+  pinMode(_ES_MIN_Y, INPUT_PULLUP);
   pinMode(_ES_MAX_Y, INPUT_PULLUP);
-  pinMode(_ES_ZERO_Z, INPUT_PULLUP);
+  pinMode(_ES_MIN_Z, INPUT_PULLUP);
   pinMode(_ES_MAX_Z, INPUT_PULLUP);
   
-  delay(3000);
+  delay(5000);
   
   initTimers();
   initEncoders();
