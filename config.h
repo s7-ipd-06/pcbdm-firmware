@@ -13,4 +13,6 @@
 #define CONTROLLER_P_X 10 // This is also limited by the maximum acceleration
 #define CONTROLLER_P_Y 10 // This is also limited by the maximum acceleration
 
+#define STABLE_MAX_ERROR // The maximum error for the axis to be considered stable
+#define UNSTABLE_MIN_ERROR // The minimum error for the axis to be considered unstable
 #define STABLECHECKS 8 // Number of times the error needs to be zero to stop the axis from moving

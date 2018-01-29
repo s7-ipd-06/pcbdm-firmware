@@ -99,43 +99,13 @@ void processCommand(char * buff) {
   }
 }
 
-// void setXSetpoint(long point) {
-//   Serial.print("Setting X-Point: ");
-  
-//   Serial.println(point);
-//   setSetPointX(point);
-//   setUnstable();
-// }
-
-// void setYSetpoint(long point) {
-//   Serial.print("Setting Y-Point ");
-//   Serial.println(point);
-//   setSetPointY(point);
-//   setUnstable();
-// }
-
-// void setZSetpoint(long point) {
-//   Serial.print("Setting Z-Point ");
-//   Serial.println(point);
-//   setSetPointZ(point);
-//   setUnstable();
-  
-// }
-// boolean LOCKED = false;
-// void lock(boolean l){
-//   LOCKED = l;
-//   if(LOCKED){
-//     setSpeedX(0);
-//     setSpeedY(0);
-//   }
-// }
-
 void setSpindle(bool state) {
   digitalWrite(_SPINDLE, state);
   Serial.println("ok");
 }
 
-// void setSpindleOff() {
-//   digitalWrite(RELAY, LOW);
-//   Serial.println("ok Spindle Off");
-// }
+void homeAxis() {
+  targetPosition_x = -1000000;
+  targetPosition_y = -1000000;
+  targetPosition_z = -1000000;
+}

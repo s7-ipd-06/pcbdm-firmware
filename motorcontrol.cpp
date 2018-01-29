@@ -190,13 +190,15 @@ void positionControl() {
   // X-axis P-controller
   long error_x = targetPosition_x - currentPosition_x;
   targetSpeed_x = error_x * CONTROLLER_P_X;
-  if(error_x == 0) stable_x++; // Stable check
+  if(error_x <= STABLE_MAX_ERROR) stable_x++; // Stable check
+  if(error_x > UNSTABLE_MIN_ERROR) stable_x = 0; // Set to unstable if error is too big
   if(stable_x > STABLECHECKS) targetSpeed_x = 0; // Set speed to zero if stable
 
   // Y-axis P-controller
   long error_y = targetPosition_y - currentPosition_y;
   targetSpeed_y = error_y * CONTROLLER_P_Y;
-  if(error_y == 0) stable_y++; // Stable check
+  if(error_y <= STABLE_MAX_ERROR) stable_y++; // Stable check
+  if(error_y > UNSTABLE_MIN_ERROR) stable_y = 0; // Set to unstable if error is too big
   if(stable_y > STABLECHECKS) targetSpeed_y = 0; // Set speed to zero if stable
 
   // Z-axis no controller, max speed used
