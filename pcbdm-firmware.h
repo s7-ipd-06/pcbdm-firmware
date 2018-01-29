@@ -21,4 +21,6 @@ extern volatile long targetPosition_x;
 extern volatile long targetPosition_y;
 extern volatile long targetPosition_z;
 
+extern volatile bool reportedStable;
+
 #endif

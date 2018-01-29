@@ -69,6 +69,7 @@ volatile bool currentDirection_y = false;
 volatile bool currentDirection_z = false;
 volatile uint8_t stable_x = 0;
 volatile uint8_t stable_y = 0;
+volatile bool reportedStable = false;
 
 // Pulse intervals, a max value of 0xFFFFFF/4294967295 = ~24 hours between a step which is used as speed 0
 volatile unsigned long cmp_x = 0xFFFFFF; // * 10 * 2 us = time between pulse/step
@@ -190,16 +191,18 @@ void positionControl() {
   // X-axis P-controller
   long error_x = targetPosition_x - currentPosition_x;
   targetSpeed_x = error_x * CONTROLLER_P_X;
-  if(error_x <= STABLE_MAX_ERROR) stable_x++; // Stable check
-  if(error_x > UNSTABLE_MIN_ERROR) stable_x = 0; // Set to unstable if error is too big
-  if(stable_x > STABLECHECKS) targetSpeed_x = 0; // Set speed to zero if stable
+  if(error_x <= STABLE_MAX_ERROR) {
+    if(stable_x < STABLECHECKS) stable_x++;
+    if(stable_x >= STABLECHECKS) targetSpeed_x = 0; // Set speed to zero if stable
+  } else if(error_x > UNSTABLE_MIN_ERROR) stable_x = 0; // Set to unstable if error is too big
 
   // Y-axis P-controller
   long error_y = targetPosition_y - currentPosition_y;
   targetSpeed_y = error_y * CONTROLLER_P_Y;
-  if(error_y <= STABLE_MAX_ERROR) stable_y++; // Stable check
-  if(error_y > UNSTABLE_MIN_ERROR) stable_y = 0; // Set to unstable if error is too big
-  if(stable_y > STABLECHECKS) targetSpeed_y = 0; // Set speed to zero if stable
+  if(error_y <= STABLE_MAX_ERROR) {
+    if(stable_y < STABLECHECKS) stable_y++;
+    if(stable_y >= STABLECHECKS) targetSpeed_y = 0; // Set speed to zero if stable
+  } else if(error_y > UNSTABLE_MIN_ERROR) stable_y = 0; // Set to unstable if error is too big
 
   // Z-axis no controller, max speed used
   long error_z = targetPosition_z - currentPosition_z;
@@ -207,6 +210,14 @@ void positionControl() {
     targetSpeed_z = 0;
   } else {
     targetSpeed_z = error_z > 0 ? ZAXISSPEED : -ZAXISSPEED;
+  }
+
+  // Print "ok" to serial if all axis are stable
+  if(!reportedStable) {
+    if(stable_x >= STABLECHECKS && stable_y >= STABLECHECKS && error_z == 0) {
+      Serial.println("ok")
+      reportedStable = true;
+    }
   }
 }
 

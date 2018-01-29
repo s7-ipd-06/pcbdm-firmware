@@ -40,10 +40,12 @@ void processCommand(char * buff) {
       if(strchr(buff, 'Z') != NULL) {
         targetPosition_z = (positioningType == 0 ? distanceX : currentPosition_z+distanceZ);
       }
+
+      reportedStable = false;
       
       break;}
     case 28: //Home axis
-      //homeAxis();
+      homeAxis();
       break;
     case 90: // Set positioning type to absolute
       Serial.println("ok");
