@@ -5,6 +5,10 @@
 #define ENCODER_X_INVERT TRUE
 #define ENCODER_Y_INVERT FALSE
 
+#define MOTOR_X_INVERT TRUE
+#define MOTOR_Y_INVERT FALSE
+#define MOTOR_Z_INVERT FALSE
+
 #define steps_um_x 1.94
 #define steps_um_y 1.94
 #define steps_um_z 1

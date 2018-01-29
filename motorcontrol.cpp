@@ -109,6 +109,12 @@ ISR(TIMER1_COMPA_vect) {
     if(currentDirection_x != newDirection) {
       currentDirection_x = newDirection;
       digitalWrite(_DIR_X, newDirection);
+
+      #if MOTOR_X_INVERT
+        digitalWrite(_DIR_X, !newDirection);
+      #else
+        digitalWrite(_DIR_X, newDirection);
+      #endif
     }
   }
 
@@ -130,7 +136,12 @@ ISR(TIMER1_COMPA_vect) {
     // Change direction if needed
     if(currentDirection_y != newDirection) {
       currentDirection_y = newDirection;
-      digitalWrite(_DIR_Y, newDirection);
+      
+      #if MOTOR_Y_INVERT
+        digitalWrite(_DIR_Y, !newDirection);
+      #else
+        digitalWrite(_DIR_Y, newDirection);
+      #endif
     }
   }
 
@@ -152,7 +163,12 @@ ISR(TIMER1_COMPA_vect) {
     // Change direction if needed
     if(currentDirection_z != newDirection) {
       currentDirection_z = newDirection;
-      digitalWrite(_DIR_Z, newDirection);
+      
+      #if MOTOR_Z_INVERT
+        digitalWrite(_DIR_Z, !newDirection);
+      #else
+        digitalWrite(_DIR_Z, newDirection);
+      #endif
     }
   }
 }
