@@ -1,10 +1,5 @@
 #include "pcbdm-firmware.h" // Contains the global state that is mutated by functions in this file
 
-// Private function declarations
-unsigned long speedToInterval(long currentSpeed);
-void checkSwitches();
-void positionControl();
-
 void initTimers() {
   cli();//stop interrupts
   //Don't use timer0, It is reserves for delay() and millis() and interferes with the serial read.
@@ -94,62 +89,69 @@ ISR(TIMER1_COMPA_vect) {
   // Position control by altering the speeds
   positionControl();
 
-  // Speed control by altering the pulse counter overflow values
+  // Change speed, accelerate/decelerate to reach target speed
   if(currentSpeed_x != targetSpeed_x) {
-    bool direction = targetSpeed_x > currentSpeed_x;
-    long deltaSpeed = abs(targetSpeed_x-currentSpeed_x);
-    
-    // Apply maximum speed difference (acceleration)
-    deltaSpeed = min(deltaSpeed, acceleration_x);
+    bool speedChangeDirection = targetSpeed_x > currentSpeed_x;
+    bool accelerating = currentSpeed_x > 0 : speedChangeDirection ? -speedChangeDirection;
+
+    long deltaSpeed = targetSpeed_x - currentSpeed_x;
+    deltaSpeed = accelerating ? min(deltaSpeed, acceleration_x) : deltaSpeed; // Apply acceleration & no deceleration
 
     // Add the change in speed to the current speed
-    currentSpeed_x += (direction ? deltaSpeed : -deltaSpeed);
-
+    currentSpeed_x += (targetSpeed_x > currentSpeed_x ? deltaSpeed : -deltaSpeed);
 
     cmp_x = speedToInterval(currentSpeed_x);
 
+    bool newDirection = currentSpeed_x > 0;
+
     // Change direction if needed
-    if(currentDirection_x != direction) {
-      currentDirection_x = direction;
-      digitalWrite(_DIR_X, direction);
+    if(currentDirection_x != newDirection) {
+      currentDirection_x = newDirection;
+      digitalWrite(_DIR_X, newDirection);
     }
   }
 
+  // Change speed, accelerate/decelerate to reach target speed
   if(currentSpeed_y != targetSpeed_y) {
-    bool direction = targetSpeed_y > currentSpeed_y;
-    long deltaSpeed = abs(targetSpeed_y-currentSpeed_y);
-    
-    // Apply maximum speed difference (acceleration)
-    deltaSpeed = min(deltaSpeed, acceleration_y);
+    bool speedChangeDirection = targetSpeed_y > currentSpeed_y;
+    bool accelerating = currentSpeed_y > 0 : speedChangeDirection ? -speedChangeDirection;
+
+    long deltaSpeed = targetSpeed_y - currentSpeed_y;
+    deltaSpeed = accelerating ? min(deltaSpeed, acceleration_y) : deltaSpeed; // Apply acceleration & no deceleration
 
     // Add the change in speed to the current speed
-    currentSpeed_y += (direction ? deltaSpeed : -deltaSpeed);
+    currentSpeed_y += (targetSpeed_y > currentSpeed_y ? deltaSpeed : -deltaSpeed);
 
     cmp_y = speedToInterval(currentSpeed_y);
 
+    bool newDirection = currentSpeed_y > 0;
+
     // Change direction if needed
-    if(currentDirection_y != direction) {
-      currentDirection_y = direction;
-      digitalWrite(_DIR_Y, direction);
+    if(currentDirection_y != newDirection) {
+      currentDirection_y = newDirection;
+      digitalWrite(_DIR_Y, newDirection);
     }
   }
 
+  // Change speed, accelerate/decelerate to reach target speed
   if(currentSpeed_z != targetSpeed_z) {
-    bool direction = targetSpeed_z > currentSpeed_z;
-    long deltaSpeed = abs(targetSpeed_z-currentSpeed_z);
-    
-    // Apply maximum speed difference (acceleration)
-    deltaSpeed = min(deltaSpeed, acceleration_z);
+    bool speedChangeDirection = targetSpeed_z > currentSpeed_z;
+    bool accelerating = currentSpeed_z > 0 : speedChangeDirection ? -speedChangeDirection;
+
+    long deltaSpeed = targetSpeed_z - currentSpeed_z;
+    deltaSpeed = accelerating ? min(deltaSpeed, acceleration_z) : deltaSpeed; // Apply acceleration & no deceleration
 
     // Add the change in speed to the current speed
-    currentSpeed_z += (direction ? deltaSpeed : -deltaSpeed);
+    currentSpeed_z += (targetSpeed_z > currentSpeed_z ? deltaSpeed : -deltaSpeed);
 
     cmp_z = speedToInterval(currentSpeed_z);
 
+    bool newDirection = currentSpeed_z > 0;
+
     // Change direction if needed
-    if(currentDirection_z != direction) {
-      currentDirection_z = direction;
-      digitalWrite(_DIR_Z, direction);
+    if(currentDirection_z != newDirection) {
+      currentDirection_z = newDirection;
+      digitalWrite(_DIR_Z, newDirection);
     }
   }
 }
@@ -166,7 +168,6 @@ void checkSwitches() {
     currentPosition_x = 0;
     targetPosition_x = 0;
     targetSpeed_x = max(0, targetSpeed_x);  // Dont allow negative speed
-    currentSpeed_x = max(0, currentSpeed_x); // Stop immediately
     //Serial.println("End switch X hit");
   }
 
@@ -174,7 +175,6 @@ void checkSwitches() {
     currentPosition_y = 0;
     targetPosition_y = 0;
     targetSpeed_y = max(0, targetSpeed_y);  // Dont allow negative speed
-    currentSpeed_y = max(0, currentSpeed_y); // Stop immediately
     //Serial.println("End switch Y hit");
   }
 
@@ -182,7 +182,6 @@ void checkSwitches() {
     currentPosition_z = 0;
     targetPosition_z = 0;
     targetSpeed_z = max(0, targetSpeed_z);  // Dont allow negative speed
-    currentSpeed_z = max(0, currentSpeed_z); // Stop immediately
     //Serial.println("End switch Z hit");
   }
 }
