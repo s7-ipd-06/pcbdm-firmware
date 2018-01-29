@@ -70,29 +70,9 @@ unsigned int buffI;
 boolean endStr = false;
 
 void loop() {
-  // Read serialport
-  if(Serial.available()) {
-    char chr = Serial.read();
-    
-    if(endStr) { // Reading the character after the \n which is a length checksum
-      byte checksum = chr;
-      byte msgLength = buffI-1;
-
-      if(checksum == msgLength) {
-        processCommand(buff);
-        //Serial.println("ok: checksum correct");
-      } else {
-        Serial.println("err: checksum error");
-      }
-      
-      buffI = 0;
-      endStr = false;
-    } else {
-      if(buffI < BUFFERSIZE) buff[buffI++] = chr; // Put character in buffer
-      if(chr == '\n') {
-        buff[buffI] = 0; // Null terminate string
-        endStr = true;
-      }
-    }
-   }
+  Serial.print("X:");
+  Serial.print(currentPosition_x);
+  Serial.print(" Y:");
+  Serial.println(currentPosition_y);
+  delay(500);
 }
