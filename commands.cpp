@@ -55,6 +55,9 @@ void processCommand(char * buff) {
       Serial.println("ok");
       positioningType = 1;
       break;
+    default:
+      Serial.println("ok: Command does not exist");
+      break;
   }
 
   int cmdM = parseNumber(buff, 'M', -1);
@@ -65,39 +68,33 @@ void processCommand(char * buff) {
     case 5: // Spindle off
       setSpindle(OFF);
       break;
+    case 114: // Get current positions
+      Serial.print("ok X:");
+      Serial.print(currentPosition_x);
+      Serial.print(" Y:");
+      Serial.print(currentPosition_y);
+      Serial.print(" Z:");
+      Serial.println(currentPosition_z);
+      break;
     case 203: // Set maximum feedrate
-      Serial.println("ok");
+      // TODO
+      Serial.println("ok: Not implemented");
+      break;
+    default:
+      Serial.println("ok: Command does not exist");
       break;
   }
 
   // Custom commands
   int cmdC = parseNumber(buff, 'C', -1);
   switch(cmdC) {
-    case 0: // Get XYZ positions
-      Serial.print("X:\t"); Serial.println(currentPosition_x);
-      Serial.print("Y:\t"); Serial.println(currentPosition_y);
-      Serial.print("Z:\t"); Serial.println(currentPosition_z);
-      //Serial.println(getXPos());
-      Serial.println("ok");
+    case 0: // C0
+      // Nothing
+      Serial.println("ok: Command does not exist");
       break;
-    case 1: // Get Y position
-      //Serial.println(buff);
-      //Serial.println(getYPos());
-      Serial.println("ok");
+    default:
+      Serial.println("ok: Command does not exist");
       break;
-    case 2: // Get Z position
-      //Serial.println(buff);
-      //Serial.println(getZPos());
-      Serial.println("ok");
-      break;
-    case 3: // Lock X & Y
-      Serial.println("ok Locking X & Y axis");
-      //lock(true);
-      break;
-    case 4: // Unlock X & Y
-      Serial.println("ok Unlocking X & Y axis");
-      //lock(false);
-      break; 
   }
 }
 
