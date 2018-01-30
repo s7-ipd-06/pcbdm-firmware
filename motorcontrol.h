@@ -2,6 +2,7 @@
 #define MOTORCONTROL_H
 
 // Public functions
+void initController();
 void initTimers();
 
 // Private function declarations

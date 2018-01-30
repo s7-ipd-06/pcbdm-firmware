@@ -29,8 +29,6 @@ volatile bool currentDirection_x = true;
 volatile bool currentDirection_y = true;
 volatile bool currentDirection_z = false;
 
-volatile uint8_t stable_x = 999;
-volatile uint8_t stable_y = 999;
 volatile bool reportedStable = true;
 
 // Pulse intervals, a max value of 0xFFFFFF/4294967295 = ~24 hours between a step which is used as speed 0
@@ -42,6 +40,12 @@ volatile unsigned long cmp_z = 0xFFFFFF;
 volatile unsigned long pc_x;
 volatile unsigned long pc_y;
 volatile unsigned long pc_z;
+
+void initController() {
+  digitalWrite(_DIR_X, currentDirection_x);
+  digitalWrite(_DIR_Y, currentDirection_y);
+  digitalWrite(_DIR_Z, currentDirection_z);
+}
 
 // Control loop that controls the speed (accelerates/decelerates) by altering the overflow values
 // Timer 1: 1 KHz
@@ -80,14 +84,9 @@ void controlLoop() {
 
     cmp_x = speedToInterval(currentSpeed_x);
 
-    bool newDirection = currentSpeed_x > 0;
-
-    // Change direction if needed
-    //if(currentDirection_x != newDirection) {
-      currentDirection_x = newDirection;
-      // Serial.print("newDirection: "); Serial.println(newDirection);
-      digitalWrite(_DIR_X, newDirection);
-    //}
+    currentDirection_x = currentSpeed_x > 0;
+    
+    digitalWrite(_DIR_X, currentDirection_x);
   }
 
   //Serial.println();
@@ -136,66 +135,36 @@ void checkSwitches() {
   }
 }
 
+long previousError_x = 0;
+long previousError_y = 0;
+long previousError_z = 0;
+
 void positionControl() {  
-  // X-axis P controller
+  // X-axis controller
   long error_x = targetPosition_x - currentPosition_x;
-  targetSpeed_x = error_x * CONTROLLER_P_X;
+  long deltaError_x = error_x - previousError_x;
+  bool stable_x = abs(error_x) <= STABLE_MAX_ERROR && abs(deltaError_x) <= STABLE_MAX_ERROR_DIFFERENCE;
+  targetSpeed_x = error_x * CONTROLLER_X_P + deltaError_x * CONTROLLER_X_D;
 
-  // Y-axis P controller
+  // Y-axis controller
   long error_y = targetPosition_y - currentPosition_y;
-  targetSpeed_y = error_y * CONTROLLER_P_Y;
+  long deltaError_y = error_y - previousError_y;
+  bool stable_y = abs(error_y) <= STABLE_MAX_ERROR && abs(deltaError_y) <= STABLE_MAX_ERROR_DIFFERENCE;
+  targetSpeed_y = error_y * CONTROLLER_Y_P + deltaError_y * CONTROLLER_Y_D;
 
-  // Z-axis P controller
+  // Z-axis controller
   long error_z = targetPosition_z - currentPosition_z;
-  targetSpeed_z = error_z * CONTROLLER_P_Z;
+  long deltaError_z = error_z - previousError_z;
+  bool stable_z = abs(error_z) <= STABLE_MAX_ERROR && abs(deltaError_z) <= STABLE_MAX_ERROR_DIFFERENCE;
+  targetSpeed_z = error_z * CONTROLLER_Z_P + deltaError_z * CONTROLLER_Z_D;
 
   // Print "ok" to serial if all axis are stable
   if(!reportedStable) {
-    if(error_x == 0) {
+    if(stable_x && stable_y && stable_z) {
       Serial.println("ok");
       reportedStable = true;
     }
   }
-
-  // X-axis P-controller
-  /*long error_x = targetPosition_x - currentPosition_x;
-  targetSpeed_x = error_x * CONTROLLER_P_X;
-  if(error_x <= STABLE_MAX_ERROR) {
-    if(stable_x < STABLECHECKS) stable_x++;
-    if(stable_x >= STABLECHECKS) {
-      targetPosition_x = currentPosition_x;
-    }
-  } else if(error_x > UNSTABLE_MIN_ERROR) {
-    stable_x = 0; // Set to unstable if error is too big
-  }
-
-  // Y-axis P-controller
-  long error_y = targetPosition_y - currentPosition_y;
-  targetSpeed_y = error_y * CONTROLLER_P_Y;
-  if(error_y <= STABLE_MAX_ERROR) {
-    if(stable_y < STABLECHECKS) stable_y++;
-    if(stable_y >= STABLECHECKS) {
-      targetPosition_y = currentPosition_y;
-    }
-  } else if(error_y > UNSTABLE_MIN_ERROR) {
-    stable_y = 0; // Set to unstable if error is too big
-  }
-
-  // Z-axis no controller, max speed used
-  long error_z = targetPosition_z - currentPosition_z;
-  if(error_z == 0) {
-    targetSpeed_z = 0;
-  } else {
-    targetSpeed_z = error_z > 0 ? ZAXISSPEED : -ZAXISSPEED;
-  }
-
-  // Print "ok" to serial if all axis are stable
-  if(!reportedStable) {
-    if(stable_x >= STABLECHECKS && stable_y >= STABLECHECKS && error_z == 0) {
-      Serial.println("ok");
-      reportedStable = true;
-    }
-  }*/
 }
 
 // Pulse motors on pulse counter overflow
@@ -294,35 +263,4 @@ void initTimers() {
   TIMSK3 |= (1 << OCIE3A);
   
   sei();//allow interrupts 
-}
-
-void initDrivers() {
-  SPI.begin();
-  
-  stepper_X.init(_SS_X);
-  stepper_Y.init(_SS_Y);
-  stepper_Z.init(_SS_Z);
-  delay(1);
-  
-  stepper_X.resetSettings();
-  stepper_X.setCurrentMilliamps(1260);
-  stepper_X.setStepMode(8);
-  stepper_X.enableDriver();
-  
-  stepper_Y.resetSettings();
-  stepper_Y.setCurrentMilliamps(1260);
-  stepper_Y.setStepMode(8);
-  stepper_Y.enableDriver();
-  
-  stepper_Z.resetSettings();
-  stepper_Z.setCurrentMilliamps(300);
-  stepper_Z.setStepMode(8);
-  stepper_Z.enableDriver();
-
-  pinMode(_DIR_X, OUTPUT);
-  pinMode(_DIR_Y, OUTPUT);
-  pinMode(_DIR_Z, OUTPUT);
-  digitalWrite(_DIR_X, currentDirection_x);
-  digitalWrite(_DIR_Y, currentDirection_y);
-  digitalWrite(_DIR_Z, currentDirection_z);
 }

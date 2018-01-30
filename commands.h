@@ -7,5 +7,6 @@ void processCommand(char * buff);
 // Private functions
 void setSpindle(bool state);
 void homeAxis();
+void waitForDoor();
 
 #endif

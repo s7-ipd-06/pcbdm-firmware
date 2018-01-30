@@ -21,16 +21,13 @@ float parseNumber(char * buff, char code, float val) {
 
 void processCommand(char * buff) {
   int cmdG = parseNumber(buff, 'G', -1);
-
-  while(digitalRead(_DOOR_SWITCH) == 0) {
-    // Wait to make sure the door is closed
-  }
   
   int unknownCounter = 0;
 
   switch(cmdG) {
     case 0:{
-      //Serial.println(buff);
+      waitForDoor();
+
       long distanceX = (long)parseNumber(buff, 'X', 0);
       long distanceY = (long)parseNumber(buff, 'Y', 0);
       long distanceZ = (long)parseNumber(buff, 'Z', 0);
@@ -72,6 +69,7 @@ void processCommand(char * buff) {
   int cmdM = parseNumber(buff, 'M', -1);
   switch(cmdM) {
     case 3: // Spindle on
+      waitForDoor();
       setSpindle(ON);
       break;
     case 5: // Spindle off
@@ -108,6 +106,12 @@ void processCommand(char * buff) {
 
   if(unknownCounter == 3) {
     Serial.println("ok: Command does not exist");
+  }
+}
+
+void waitForDoor() {
+  while(digitalRead(_DOOR_SWITCH) == 0) {
+    // Wait to make sure the door is closed
   }
 }
 

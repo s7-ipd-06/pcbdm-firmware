@@ -11,10 +11,18 @@
 #define steps_um_z 1
 
 // Controller factors
-#define CONTROLLER_P_X 10 // This is also limited by the maximum acceleration
-#define CONTROLLER_P_Y 10 // This is also limited by the maximum acceleration
-#define CONTROLLER_P_Z 10 // This is also limited by the maximum acceleration
+#define CONTROLLER_X_P 8
+#define CONTROLLER_X_D 1
 
-#define STABLE_MAX_ERROR 2 // The maximum error for the axis to be considered stable
-#define UNSTABLE_MIN_ERROR 5 // The minimum error for the axis to be considered unstable
-#define STABLECHECKS 8 // Number of times the error needs to be zero to stop the axis from moving
+#define CONTROLLER_Y_P 8
+#define CONTROLLER_Y_D 1
+
+#define CONTROLLER_Z_P 8
+#define CONTROLLER_Z_D 1
+
+// The maximum static error for the axis to be considered stable
+#define STABLE_MAX_ERROR 1
+
+// The maximum difference in error between
+// control loop ticks for the axis to be considered stable
+#define STABLE_MAX_ERROR_DIFFERENCE 1
