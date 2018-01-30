@@ -219,25 +219,25 @@ void checkSwitches() {
 void positionControl() {  
   // X-axis P-controller
   long error_x = targetPosition_x - currentPosition_x;
+  targetSpeed_x = error_x * CONTROLLER_P_X;
   if(error_x <= STABLE_MAX_ERROR) {
     if(stable_x < STABLECHECKS) stable_x++;
     if(stable_x >= STABLECHECKS) {
       targetPosition_x = currentPosition_x;
-    } // Set speed to zero if stable
+    }
   } else if(error_x > UNSTABLE_MIN_ERROR) {
-    targetSpeed_x = error_x * CONTROLLER_P_X;
     stable_x = 0; // Set to unstable if error is too big
   }
 
   // Y-axis P-controller
   long error_y = targetPosition_y - currentPosition_y;
+  targetSpeed_y = error_y * CONTROLLER_P_Y;
   if(error_y <= STABLE_MAX_ERROR) {
     if(stable_y < STABLECHECKS) stable_y++;
     if(stable_y >= STABLECHECKS) {
       targetPosition_y = currentPosition_y;
     }
   } else if(error_y > UNSTABLE_MIN_ERROR) {
-    targetSpeed_y = error_y * CONTROLLER_P_Y;
     stable_y = 0; // Set to unstable if error is too big
   }
 
@@ -265,12 +265,18 @@ ISR(TIMER2_COMPA_vect) {
     pc_x = 0;
     
     PORTE ^= 1 << _PULSE_X_N;
+
+    // Count pulses to determine current position of the Z axis
+    currentPosition_x += currentDirection_x ? 1 : -1;
   }
   
   if(pc_y >= cmp_y) {
     pc_y = 0;
     
     PORTE ^= 1 << _PULSE_Y_N;
+
+    // Count pulses to determine current position of the Z axis
+    currentPosition_y += currentDirection_y ? 1 : -1;
   }
 
   if(pc_z >= cmp_z) {
@@ -298,7 +304,7 @@ unsigned long speedToInterval(long currentSpeed) {
   const float base = 100000/2;
   int d = base/currentSpeed;
   
-  d = max(d, 10); // Minimum interval, max speed
+  d = max(d, 25); // Minimum interval, max speed
   d = min(d, 50000); // Maximum interval, min speed
 
   return d;
