@@ -111,14 +111,14 @@ void controlLoop() {
   checkSwitches();
 
   // Position control by altering the speeds
-  positionControl();
+  //positionControl();
   //Serial.print(currentPosition_x);
   //Serial.print("\t"); Serial.print(targetPosition_x);
   //Serial.print("\t"); Serial.print(currentSpeed_x);
   //Serial.print("\t"); Serial.print(targetSpeed_x);
 
   // Change speed, accelerate/decelerate to reach target speed
-  if(currentSpeed_x != targetSpeed_x) {
+  /*if(currentSpeed_x != targetSpeed_x) {
     bool speedChangeDirection = targetSpeed_x > currentSpeed_x;
     bool accelerating = speedChangeDirection ? currentSpeed_x >= 0 : currentPosition_x <= 0;
 
@@ -149,7 +149,7 @@ void controlLoop() {
         digitalWrite(_DIR_X, newDirection);
       #endif
     //}
-  }
+  }*/
 
   //Serial.println();
 }
@@ -162,36 +162,36 @@ void checkSwitches() {
   bool es_z_min = !digitalRead(_ES_MIN_Z);
   bool es_z_max = digitalRead(_ES_MAX_Z);
 
-  if(es_x_min && targetSpeed_x < 0) { // If switch hit and moving into switch direction
+  if(es_x_min) { // If switch hit and moving into switch direction
     currentPosition_x = 0;
     targetPosition_x = 0;
     //currentSpeed_x = 0;
     Serial.println("Min switch X hit");
   }
 
-  if(es_x_max && targetSpeed_x > 0) { // If switch hit and moving into switch direction
+  if(es_x_max) { // If switch hit and moving into switch direction
     targetPosition_x = currentPosition_x;
     Serial.println("Max switch X hit");
   }
 
-  if(es_y_min && targetSpeed_y < 0) { // If switch hit and moving into switch direction
+  if(es_y_min) { // If switch hit and moving into switch direction
     currentPosition_y = 0;
     targetPosition_y = 0;
     Serial.println("Min switch Y hit");
   }
 
-  if(es_y_max && targetSpeed_y > 0) { // If switch hit and moving into switch direction
+  if(es_y_max) { // If switch hit and moving into switch direction
     targetPosition_y = currentPosition_x;
     Serial.println("Max switch Y hit");
   }
 
-  if(es_z_min && targetSpeed_z < 0) { // If switch hit and moving into switch direction
+  if(es_z_min) { // If switch hit and moving into switch direction
     currentPosition_z = 0;
     targetPosition_z = 0;
     Serial.println("Min switch Z hit");
   }
 
-  if(es_z_max && targetSpeed_z > 0) { // If switch hit and moving into switch direction
+  if(es_z_max) { // If switch hit and moving into switch direction
     targetPosition_z = currentPosition_x;
     Serial.println("Max switch Z hit");
   }
