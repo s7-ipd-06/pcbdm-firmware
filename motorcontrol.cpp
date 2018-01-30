@@ -25,9 +25,10 @@ volatile long targetSpeed_x = 0;
 volatile long targetSpeed_y = 0;
 volatile long targetSpeed_z = 0;
 
+// Initial direction values
 volatile bool currentDirection_x = true;
 volatile bool currentDirection_y = true;
-volatile bool currentDirection_z = false;
+volatile bool currentDirection_z = true;
 
 volatile bool reportedStable = true;
 
@@ -48,21 +49,17 @@ void initController() {
 }
 
 // Control loop that controls the speed (accelerates/decelerates) by altering the overflow values
-// Timer 1: 1 KHz
+// Timer 1: 1 KHz / 1ms / 16000 available clock cycles
 ISR(TIMER1_COMPA_vect) {
   controlLoop(); 
 }
 
 void controlLoop() {
-  // Check end switches and adjust speeds & position accordingly
+  // Check end switches and adjust target- speeds & position accordingly
   checkSwitches();
 
-  // Position control by altering the speeds
+  // Determine target speed based on target position
   positionControl();
-  //Serial.print(currentPosition_x);
-  //Serial.print("\t"); Serial.print(targetPosition_x);
-  //Serial.print("\t"); Serial.print(currentSpeed_x);
-  //Serial.print("\t"); Serial.print(targetSpeed_x);
 
   // Change speed, accelerate/decelerate to reach target speed
   if(currentSpeed_x != targetSpeed_x) {
@@ -71,67 +68,19 @@ void controlLoop() {
 
     long deltaSpeed = targetSpeed_x - currentSpeed_x;
 
-    //Serial.print("\t"); Serial.print(deltaSpeed);
-
     long rateOfChange = accelerating ? acceleration_x : deceleration_x;
     deltaSpeed = deltaSpeed > rateOfChange ? rateOfChange : deltaSpeed;
     deltaSpeed = deltaSpeed < -rateOfChange ? -rateOfChange : deltaSpeed;
 
     Serial.print("\t"); Serial.print(deltaSpeed);
 
-    // Add the change in speed to the current speed
-    currentSpeed_x += deltaSpeed;
+    currentSpeed_x += deltaSpeed; // Add the change in speed to the current speed
 
     cmp_x = speedToInterval(currentSpeed_x);
 
     currentDirection_x = currentSpeed_x > 0;
     
     digitalWrite(_DIR_X, currentDirection_x);
-  }
-
-  //Serial.println();
-}
-
-void checkSwitches() {
-  bool es_x_min = !digitalRead(_ES_MIN_X);
-  bool es_x_max = !digitalRead(_ES_MAX_X);
-  bool es_y_min = !digitalRead(_ES_MIN_Y);
-  bool es_y_max = !digitalRead(_ES_MAX_Y);
-  bool es_z_min = !digitalRead(_ES_MIN_Z);
-  bool es_z_max = digitalRead(_ES_MAX_Z);
-
-  if(es_x_min && targetSpeed_x < 0) { // If switch hit and moving into switch direction
-    currentPosition_x = 0;
-    targetPosition_x = 0;
-    currentSpeed_x = 0;
-    Serial.println("Min switch X hit");
-  }
-
-  if(es_x_max && targetSpeed_x > 0) { // If switch hit and moving into switch direction
-    targetPosition_x = currentPosition_x;
-    Serial.println("Max switch X hit");
-  }
-
-  if(es_y_min && targetSpeed_y < 0) { // If switch hit and moving into switch direction
-    currentPosition_y = 0;
-    targetPosition_y = 0;
-    Serial.println("Min switch Y hit");
-  }
-
-  if(es_y_max && targetSpeed_y > 0) { // If switch hit and moving into switch direction
-    targetPosition_y = currentPosition_x;
-    Serial.println("Max switch Y hit");
-  }
-
-  if(es_z_min && targetSpeed_z < 0) { // If switch hit and moving into switch direction
-    currentPosition_z = 0;
-    targetPosition_z = 0;
-    Serial.println("Min switch Z hit");
-  }
-
-  if(es_z_max && targetSpeed_z > 0) { // If switch hit and moving into switch direction
-    targetPosition_z = currentPosition_x;
-    Serial.println("Max switch Z hit");
   }
 }
 
@@ -168,12 +117,13 @@ void positionControl() {
 }
 
 // Pulse motors on pulse counter overflow
-// Timer 2: 20 KHz / 800 clock cycles
+// Timer 2: 20 KHz / 50µs / 800 available clock cycles
 ISR(TIMER2_COMPA_vect) {
   if(pc_x >= cmp_x) {
     pc_x = 0;
     
-    _PULSE_X_R ^= 1 << _PULSE_X_N;
+    // Set NXT/STEP signal high
+    _PULSE_X_R |= (1 << _PULSE_X_N);
 
     // Count pulses to determine current position of the Z axis
     currentPosition_x += currentDirection_x ? 1 : -1;
@@ -182,7 +132,7 @@ ISR(TIMER2_COMPA_vect) {
   if(pc_y >= cmp_y) {
     pc_y = 0;
     
-    _PULSE_Y_R ^= 1 << _PULSE_Y_N;
+    _PULSE_Y_R |= (1 << _PULSE_Y_N);
 
     // Count pulses to determine current position of the Z axis
     currentPosition_y += currentDirection_y ? 1 : -1;
@@ -191,7 +141,7 @@ ISR(TIMER2_COMPA_vect) {
   if(pc_z >= cmp_z) {
     pc_z = 0;
     
-    _PULSE_Z_R ^= 1 << _PULSE_Z_N;
+    _PULSE_Z_R |= (1 << _PULSE_Z_N);
 
     // Count pulses to determine current position of the Z axis
     currentPosition_z += currentDirection_z ? 1 : -1;
@@ -199,21 +149,25 @@ ISR(TIMER2_COMPA_vect) {
 }
 
 // Increase pulse counters
-// Timer 3: 100 KHz / 10us / 160 clock cycles
+// Timer 3: 100 KHz / 10us / 160 available clock cycles
 ISR(TIMER3_COMPA_vect) {
   pc_x++;
   pc_y++;
   pc_z++;
+
+  // Set the NXT/STEP signals low after 20 µs, the minimum high pulse width is 2 µs.
+  if(pc_x == 2) _PULSE_X_R |= (1 << _PULSE_X_N);
+  if(pc_y == 2) _PULSE_Y_R |= (1 << _PULSE_Y_N);
+  if(pc_z == 2) _PULSE_Z_R |= (1 << _PULSE_Z_N);
 }
 
 unsigned long speedToInterval(long currentSpeed) {
-  if(currentSpeed == 0)
-    return 0xFFFFFF;
+  if(currentSpeed == 0) return 0xFFFFFF;
   
   const float base = 100000/2;
   int d = base/currentSpeed;
   
-  d = max(d, 5); // Minimum interval, max speed
+  d = max(d, 1); // Minimum interval, max speed
   d = min(d, 50000); // Maximum interval, min speed
 
   return d;
@@ -263,4 +217,47 @@ void initTimers() {
   TIMSK3 |= (1 << OCIE3A);
   
   sei();//allow interrupts 
+}
+
+void checkSwitches() {
+  bool es_x_min = !digitalRead(_ES_MIN_X);
+  bool es_x_max = !digitalRead(_ES_MAX_X);
+  bool es_y_min = !digitalRead(_ES_MIN_Y);
+  bool es_y_max = !digitalRead(_ES_MAX_Y);
+  bool es_z_min = !digitalRead(_ES_MIN_Z);
+  bool es_z_max = digitalRead(_ES_MAX_Z);
+
+  if(es_x_min && targetSpeed_x < 0) { // If switch hit and moving into switch direction
+    currentPosition_x = 0;
+    targetPosition_x = 0;
+    currentSpeed_x = 0;
+    Serial.println("Min switch X hit");
+  }
+
+  if(es_x_max && targetSpeed_x > 0) { // If switch hit and moving into switch direction
+    targetPosition_x = currentPosition_x;
+    Serial.println("Max switch X hit");
+  }
+
+  if(es_y_min && targetSpeed_y < 0) { // If switch hit and moving into switch direction
+    currentPosition_y = 0;
+    targetPosition_y = 0;
+    Serial.println("Min switch Y hit");
+  }
+
+  if(es_y_max && targetSpeed_y > 0) { // If switch hit and moving into switch direction
+    targetPosition_y = currentPosition_x;
+    Serial.println("Max switch Y hit");
+  }
+
+  if(es_z_min && targetSpeed_z < 0) { // If switch hit and moving into switch direction
+    currentPosition_z = 0;
+    targetPosition_z = 0;
+    Serial.println("Min switch Z hit");
+  }
+
+  if(es_z_max && targetSpeed_z > 0) { // If switch hit and moving into switch direction
+    targetPosition_z = currentPosition_x;
+    Serial.println("Max switch Z hit");
+  }
 }
