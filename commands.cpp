@@ -21,6 +21,10 @@ float parseNumber(char * buff, char code, float val) {
 
 void processCommand(char * buff) {
   int cmdG = parseNumber(buff, 'G', -1);
+
+  while(digitalRead(_DOOR_SWITCH) == 0) {
+    // Wait to make sure the door is closed
+  }
   
   int unknownCounter = 0;
 
