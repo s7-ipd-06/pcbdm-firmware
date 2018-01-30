@@ -242,6 +242,7 @@ void checkSwitches() {
   if(es_y_min && targetSpeed_y < 0) { // If switch hit and moving into switch direction
     currentPosition_y = 0;
     targetPosition_y = 0;
+    currentSpeed_y = 0;
     Serial.println("Min switch Y hit");
   }
 
@@ -253,6 +254,7 @@ void checkSwitches() {
   if(es_z_min && targetSpeed_z < 0) { // If switch hit and moving into switch direction
     currentPosition_z = 0;
     targetPosition_z = 0;
+    currentSpeed_z = 0;
     Serial.println("Min switch Z hit");
   }
 
