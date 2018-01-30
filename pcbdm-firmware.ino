@@ -1,0 +1,117 @@
+#include "pcbdm-firmware.h"
+
+// Include declarations of functions that are used in this file
+#include "commands.h"
+#include "motorcontrol.h"
+
+// External libraries
+#include <SPI.h>
+#include <AMIS30543.h>
+
+// Global state initialization
+bool positioningType = 0; // 0 = absolute, 1 = relative
+
+AMIS30543 stepper_X;
+AMIS30543 stepper_Y;
+AMIS30543 stepper_Z;
+
+void initDrivers() {
+  SPI.begin();
+  
+  stepper_X.init(_SS_X);
+  stepper_Y.init(_SS_Y);
+  stepper_Z.init(_SS_Z);
+  delay(1);
+  
+  stepper_X.resetSettings();
+  stepper_X.setCurrentMilliamps(1260);
+  stepper_X.setStepMode(8);
+  stepper_X.enableDriver();
+  
+  stepper_Y.resetSettings();
+  stepper_Y.setCurrentMilliamps(1260);
+  stepper_Y.setStepMode(8);
+  stepper_Y.enableDriver();
+  
+  stepper_Z.resetSettings();
+  stepper_Z.setCurrentMilliamps(300);
+  stepper_Z.setStepMode(8);
+  stepper_Z.enableDriver();
+
+  pinMode(_DIR_X, OUTPUT);
+  pinMode(_DIR_Y, OUTPUT);
+  pinMode(_DIR_Z, OUTPUT);
+  #if MOTOR_X_INVERT
+    digitalWrite(_DIR_X, 0);
+  #else
+    digitalWrite(_DIR_X, 1);
+  #endif
+  #if MOTOR_Y_INVERT
+    digitalWrite(_DIR_Y, 0);
+  #else
+    digitalWrite(_DIR_Y, 1);
+  #endif
+  #if MOTOR_Z_INVERT
+    digitalWrite(_DIR_Z, 0);
+  #else
+    digitalWrite(_DIR_Z, 1);
+  #endif
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  // Initialize pins
+  pinMode(_SPINDLE, OUTPUT);
+  digitalWrite(_SPINDLE, LOW);
+
+  pinMode(_DOOR_SWITCH, INPUT_PULLUP);
+
+  pinMode(_ES_MIN_X, INPUT_PULLUP);
+  pinMode(_ES_MAX_X, INPUT_PULLUP);
+  pinMode(_ES_MIN_Y, INPUT_PULLUP);
+  pinMode(_ES_MAX_Y, INPUT_PULLUP);
+  pinMode(_ES_MIN_Z, INPUT_PULLUP);
+  pinMode(_ES_MAX_Z, INPUT_PULLUP);
+  
+  delay(4000);
+  
+  initTimers();
+  initDrivers();
+  
+  Serial.println("Ready");
+}
+
+#define BUFFERSIZE 100
+char buff[BUFFERSIZE];
+unsigned int buffI;
+
+boolean endStr = false;
+
+void loop() {
+  // Read serialport
+  if(Serial.available()) {
+    char chr = Serial.read();
+    
+    if(endStr) { // Reading the character after the \n which is a length checksum
+      byte checksum = chr;
+      byte msgLength = buffI-1;
+
+      if(checksum == msgLength) {
+        processCommand(buff);
+        //Serial.println("ok: checksum correct");
+      } else {
+        Serial.println("err: checksum error");
+      }
+      
+      buffI = 0;
+      endStr = false;
+    } else {
+      if(buffI < BUFFERSIZE) buff[buffI++] = chr; // Put character in buffer
+      if(chr == '\n') {
+        buff[buffI] = 0; // Null terminate string
+        endStr = true;
+      }
+    }
+   }
+}
