@@ -51,7 +51,7 @@ void initTimers() {
 volatile long currentPosition_x = 0;
 volatile long currentPosition_y = 0;
 volatile long currentPosition_z = 0;
-volatile long targetPosition_x = 9999999;
+volatile long targetPosition_x = -9999999;
 volatile long targetPosition_y = 0;
 volatile long targetPosition_z = 0;
 
@@ -165,7 +165,7 @@ void checkSwitches() {
   if(es_x_min && targetSpeed_x < 0) { // If switch hit and moving into switch direction
     currentPosition_x = 0;
     targetPosition_x = 0;
-    //currentSpeed_x = 0;
+    currentSpeed_x = 0;
     Serial.println("Min switch X hit");
   }
 
