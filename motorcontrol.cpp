@@ -2,51 +2,6 @@
 
 #include "motorcontrol.h"
 
-void initTimers() {
-  cli();//stop interrupts
-  //Don't use timer0, It is reserves for delay() and millis() and interferes with the serial read.
-
-  //set timer1 interrupt at 1kHz
-  TCCR1A = 0;// set entire TCCR1A register to 0
-  TCCR1B = 0;// same for TCCR1B
-  TCNT1  = 0;//initialize counter value to 0
-  
-  OCR1A = 15;// 
-  // turn on CTC mode
-  TCCR1B |= (1 << WGM12);
-  // Set CS12 and CS10 bits for 1024 prescaler
-  TCCR1B |= (1 << CS12) | (1 << CS10);  
-  // enable timer compare interrupt
-  TIMSK1 |= (1 << OCIE1A);
-  
-  //set timer2 interrupt at 20kHz
-  TCCR2A = 0;// set entire TCCR2A register to 0
-  TCCR2B = 0;// same for TCCR2B
-  TCNT2  = 0;//initialize counter value to 0
-  // set compare match register for 8khz increments
-  OCR2A = 99;// = (16*10^6) / (8000*8) - 1 (must be <256)
-  // turn on CTC mode
-  TCCR2A |= (1 << WGM21);
-  // Set CS21 bit for 8 prescaler
-  TCCR2B |= (1 << CS21);   
-  // enable timer compare interrupt
-  TIMSK2 |= (1 << OCIE2A);
-  //set timer3 at 100kz
-  TCCR3A = 0;// set entire TCCR1A register to 0
-  TCCR3B = 0;// same for TCCR1B
-  TCNT3  = 0;//initialize counter value to 0
-  // set compare match register for 1hz increments
-  OCR3A = 19;// = (16*10^6) / (1*1024) - 1 (must be <65536)
-  // turn on CTC mode
-  TCCR3B |= (1 << WGM32);
-  // Set CS12 and CS10 bits for 1024 prescaler
-  TCCR3B |= (1 << CS31) ;//| (1 << CS30);  
-  // enable timer compare interrupt
-  TIMSK3 |= (1 << OCIE3A);
-  
-  sei();//allow interrupts 
-}
-
 // Position in encoder steps for the XY axis and stepper motor steps for the Z axis
 volatile long currentPosition_x = 0;
 volatile long currentPosition_y = 0;
@@ -70,21 +25,9 @@ volatile long targetSpeed_x = 0;
 volatile long targetSpeed_y = 0;
 volatile long targetSpeed_z = 0;
 
-#if MOTOR_X_INVERT
-  volatile bool currentDirection_x = false;
-#else
-  volatile bool currentDirection_x = true;
-#endif
-#if MOTOR_Y_INVERT
-  volatile bool currentDirection_y = false;
-#else
-  volatile bool currentDirection_y = true;
-#endif
-#if MOTOR_Z_INVERT
-  volatile bool currentDirection_z = false;
-#else
-  volatile bool currentDirection_z = true;
-#endif
+volatile bool currentDirection_x = true;
+volatile bool currentDirection_y = true;
+volatile bool currentDirection_z = false;
 
 volatile uint8_t stable_x = 999;
 volatile uint8_t stable_y = 999;
@@ -143,11 +86,7 @@ void controlLoop() {
     //if(currentDirection_x != newDirection) {
       currentDirection_x = newDirection;
       // Serial.print("newDirection: "); Serial.println(newDirection);
-      #if MOTOR_X_INVERT
-        digitalWrite(_DIR_X, !newDirection);
-      #else
-        digitalWrite(_DIR_X, newDirection);
-      #endif
+      digitalWrite(_DIR_X, newDirection);
     //}
   }
 
@@ -309,4 +248,81 @@ unsigned long speedToInterval(long currentSpeed) {
   d = min(d, 50000); // Maximum interval, min speed
 
   return d;
+}
+
+
+void initTimers() {
+  cli();//stop interrupts
+  //Don't use timer0, It is reserves for delay() and millis() and interferes with the serial read.
+
+  //set timer1 interrupt at 1kHz
+  TCCR1A = 0;// set entire TCCR1A register to 0
+  TCCR1B = 0;// same for TCCR1B
+  TCNT1  = 0;//initialize counter value to 0
+  
+  OCR1A = 15;// 
+  // turn on CTC mode
+  TCCR1B |= (1 << WGM12);
+  // Set CS12 and CS10 bits for 1024 prescaler
+  TCCR1B |= (1 << CS12) | (1 << CS10);  
+  // enable timer compare interrupt
+  TIMSK1 |= (1 << OCIE1A);
+  
+  //set timer2 interrupt at 20kHz
+  TCCR2A = 0;// set entire TCCR2A register to 0
+  TCCR2B = 0;// same for TCCR2B
+  TCNT2  = 0;//initialize counter value to 0
+  // set compare match register for 8khz increments
+  OCR2A = 99;// = (16*10^6) / (8000*8) - 1 (must be <256)
+  // turn on CTC mode
+  TCCR2A |= (1 << WGM21);
+  // Set CS21 bit for 8 prescaler
+  TCCR2B |= (1 << CS21);   
+  // enable timer compare interrupt
+  TIMSK2 |= (1 << OCIE2A);
+  //set timer3 at 100kz
+  TCCR3A = 0;// set entire TCCR1A register to 0
+  TCCR3B = 0;// same for TCCR1B
+  TCNT3  = 0;//initialize counter value to 0
+  // set compare match register for 1hz increments
+  OCR3A = 19;// = (16*10^6) / (1*1024) - 1 (must be <65536)
+  // turn on CTC mode
+  TCCR3B |= (1 << WGM32);
+  // Set CS12 and CS10 bits for 1024 prescaler
+  TCCR3B |= (1 << CS31) ;//| (1 << CS30);  
+  // enable timer compare interrupt
+  TIMSK3 |= (1 << OCIE3A);
+  
+  sei();//allow interrupts 
+}
+
+void initDrivers() {
+  SPI.begin();
+  
+  stepper_X.init(_SS_X);
+  stepper_Y.init(_SS_Y);
+  stepper_Z.init(_SS_Z);
+  delay(1);
+  
+  stepper_X.resetSettings();
+  stepper_X.setCurrentMilliamps(1260);
+  stepper_X.setStepMode(8);
+  stepper_X.enableDriver();
+  
+  stepper_Y.resetSettings();
+  stepper_Y.setCurrentMilliamps(1260);
+  stepper_Y.setStepMode(8);
+  stepper_Y.enableDriver();
+  
+  stepper_Z.resetSettings();
+  stepper_Z.setCurrentMilliamps(300);
+  stepper_Z.setStepMode(8);
+  stepper_Z.enableDriver();
+
+  pinMode(_DIR_X, OUTPUT);
+  pinMode(_DIR_Y, OUTPUT);
+  pinMode(_DIR_Z, OUTPUT);
+  digitalWrite(_DIR_X, currentDirection_x);
+  digitalWrite(_DIR_Y, currentDirection_y);
+  digitalWrite(_DIR_Z, currentDirection_z);
 }

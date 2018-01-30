@@ -15,49 +15,6 @@ AMIS30543 stepper_X;
 AMIS30543 stepper_Y;
 AMIS30543 stepper_Z;
 
-void initDrivers() {
-  SPI.begin();
-  
-  stepper_X.init(_SS_X);
-  stepper_Y.init(_SS_Y);
-  stepper_Z.init(_SS_Z);
-  delay(1);
-  
-  stepper_X.resetSettings();
-  stepper_X.setCurrentMilliamps(1260);
-  stepper_X.setStepMode(8);
-  stepper_X.enableDriver();
-  
-  stepper_Y.resetSettings();
-  stepper_Y.setCurrentMilliamps(1260);
-  stepper_Y.setStepMode(8);
-  stepper_Y.enableDriver();
-  
-  stepper_Z.resetSettings();
-  stepper_Z.setCurrentMilliamps(300);
-  stepper_Z.setStepMode(8);
-  stepper_Z.enableDriver();
-
-  pinMode(_DIR_X, OUTPUT);
-  pinMode(_DIR_Y, OUTPUT);
-  pinMode(_DIR_Z, OUTPUT);
-  #if MOTOR_X_INVERT
-    digitalWrite(_DIR_X, 0);
-  #else
-    digitalWrite(_DIR_X, 1);
-  #endif
-  #if MOTOR_Y_INVERT
-    digitalWrite(_DIR_Y, 0);
-  #else
-    digitalWrite(_DIR_Y, 1);
-  #endif
-  #if MOTOR_Z_INVERT
-    digitalWrite(_DIR_Z, 0);
-  #else
-    digitalWrite(_DIR_Z, 1);
-  #endif
-}
-
 void setup() {
   Serial.begin(115200);
 

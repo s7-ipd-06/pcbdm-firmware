@@ -6,10 +6,6 @@
 #define ENCODER_X_INVERT false
 #define ENCODER_Y_INVERT false
 
-#define MOTOR_X_INVERT true
-#define MOTOR_Y_INVERT false
-#define MOTOR_Z_INVERT true
-
 #define steps_um_x 1.94
 #define steps_um_y 1.94
 #define steps_um_z 1
