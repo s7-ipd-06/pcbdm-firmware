@@ -1,15 +1,18 @@
 // Motors
 #define _DIR_X     6
 #define _PULSE_X   5
+#define _PULSE_X_R PORTE
 #define _PULSE_X_N PE3
 
 #define _DIR_Y     9
 #define _PULSE_Y   8
-#define _PULSE_Y_N PE6
+#define _PULSE_Y_R PORTH
+#define _PULSE_Y_N PH5
 
 #define _DIR_Z     3
 #define _PULSE_Z   2
-#define _PULSE_Z_N PE0
+#define _PULSE_Z_R PORTE
+#define _PULSE_Z_N PE4
 
 #define _SS_X      7
 #define _SS_Y      10

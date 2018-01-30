@@ -41,6 +41,21 @@ void initDrivers() {
   pinMode(_DIR_X, OUTPUT);
   pinMode(_DIR_Y, OUTPUT);
   pinMode(_DIR_Z, OUTPUT);
+  #if MOTOR_X_INVERT
+    digitalWrite(_DIR_X, 0);
+  #else
+    digitalWrite(_DIR_X, 1);
+  #endif
+  #if MOTOR_Y_INVERT
+    digitalWrite(_DIR_Y, 0);
+  #else
+    digitalWrite(_DIR_Y, 1);
+  #endif
+  #if MOTOR_Z_INVERT
+    digitalWrite(_DIR_Z, 0);
+  #else
+    digitalWrite(_DIR_Z, 1);
+  #endif
 }
 
 void setup() {
@@ -59,7 +74,7 @@ void setup() {
   pinMode(_ES_MIN_Z, INPUT_PULLUP);
   pinMode(_ES_MAX_Z, INPUT_PULLUP);
   
-  delay(5000);
+  delay(4000);
   
   initTimers();
   initDrivers();
@@ -74,8 +89,6 @@ unsigned int buffI;
 boolean endStr = false;
 
 void loop() {
-  controlLoop();
-
   // Read serialport
   if(Serial.available()) {
     char chr = Serial.read();

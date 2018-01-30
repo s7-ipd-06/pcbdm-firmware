@@ -51,24 +51,41 @@ void initTimers() {
 volatile long currentPosition_x = 0;
 volatile long currentPosition_y = 0;
 volatile long currentPosition_z = 0;
-volatile long targetPosition_x = 3200; // 8 * 400
+volatile long targetPosition_x = 9999999;
 volatile long targetPosition_y = 0;
 volatile long targetPosition_z = 0;
 
-long acceleration_x = 5;
-long acceleration_y = 5;
-long acceleration_z = 5;
+long acceleration_x = 50;
+long acceleration_y = 50;
+long acceleration_z = 50;
+long deceleration_x = 100;
+long deceleration_y = 100;
+long deceleration_z = 100;
 
 // Speed, can go negative
 volatile long currentSpeed_x = 0;
 volatile long currentSpeed_y = 0;
 volatile long currentSpeed_z = 0;
-volatile long targetSpeed_x = 3200;
+volatile long targetSpeed_x = 0;
 volatile long targetSpeed_y = 0;
 volatile long targetSpeed_z = 0;
-volatile bool currentDirection_x = false;
-volatile bool currentDirection_y = false;
-volatile bool currentDirection_z = false;
+
+#if MOTOR_X_INVERT
+  volatile bool currentDirection_x = false;
+#else
+  volatile bool currentDirection_x = true;
+#endif
+#if MOTOR_Y_INVERT
+  volatile bool currentDirection_y = false;
+#else
+  volatile bool currentDirection_y = true;
+#endif
+#if MOTOR_Z_INVERT
+  volatile bool currentDirection_z = false;
+#else
+  volatile bool currentDirection_z = true;
+#endif
+
 volatile uint8_t stable_x = 999;
 volatile uint8_t stable_y = 999;
 volatile bool reportedStable = true;
@@ -86,19 +103,19 @@ volatile unsigned long pc_z;
 // Control loop that controls the speed (accelerates/decelerates) by altering the overflow values
 // Timer 1: 1 KHz
 ISR(TIMER1_COMPA_vect) {
-  //controlLoop(); 
+  controlLoop(); 
 }
 
 void controlLoop() {
   // Check end switches and adjust speeds & position accordingly
-  //checkSwitches();
+  checkSwitches();
 
   // Position control by altering the speeds
-  //positionControl();
-  // Serial.print("currentPosition: "); Serial.println(currentPosition_x);
-  // Serial.print("targetPosition: "); Serial.println(currentPosition_x);
-  Serial.print("currentSpeed: "); Serial.println(currentSpeed_x);
-  Serial.print("targetSpeed: "); Serial.println(targetSpeed_x);
+  positionControl();
+  //Serial.print(currentPosition_x);
+  //Serial.print("\t"); Serial.print(targetPosition_x);
+  //Serial.print("\t"); Serial.print(currentSpeed_x);
+  //Serial.print("\t"); Serial.print(targetSpeed_x);
 
   // Change speed, accelerate/decelerate to reach target speed
   if(currentSpeed_x != targetSpeed_x) {
@@ -106,29 +123,35 @@ void controlLoop() {
     bool accelerating = speedChangeDirection ? currentSpeed_x >= 0 : currentPosition_x <= 0;
 
     long deltaSpeed = targetSpeed_x - currentSpeed_x;
-    deltaSpeed = accelerating ? min(deltaSpeed, acceleration_x) : deltaSpeed; // Apply acceleration & no deceleration
+
+    //Serial.print("\t"); Serial.print(deltaSpeed);
+
+    long rateOfChange = accelerating ? acceleration_x : deceleration_x;
+    deltaSpeed = deltaSpeed > rateOfChange ? rateOfChange : deltaSpeed;
+    deltaSpeed = deltaSpeed < -rateOfChange ? -rateOfChange : deltaSpeed;
+
+    Serial.print("\t"); Serial.print(deltaSpeed);
 
     // Add the change in speed to the current speed
-    currentSpeed_x += (targetSpeed_x > currentSpeed_x ? deltaSpeed : -deltaSpeed);
+    currentSpeed_x += deltaSpeed;
 
     cmp_x = speedToInterval(currentSpeed_x);
 
-    bool newDirection = currentSpeed_x > 0; // true
+    bool newDirection = currentSpeed_x > 0;
 
     // Change direction if needed
-    Serial.print("currentDirection: "); Serial.println(currentDirection_x);
-    Serial.print("newDirection: "); Serial.println(newDirection);
-
-    if(currentDirection_x != newDirection) { // true
+    //if(currentDirection_x != newDirection) {
       currentDirection_x = newDirection;
-      //Serial.print("newDirection: "); Serial.println(newDirection);
+      // Serial.print("newDirection: "); Serial.println(newDirection);
       #if MOTOR_X_INVERT
         digitalWrite(_DIR_X, !newDirection);
       #else
         digitalWrite(_DIR_X, newDirection);
       #endif
-    }
+    //}
   }
+
+  //Serial.println();
 }
 
 void checkSwitches() {
@@ -142,6 +165,7 @@ void checkSwitches() {
   if(es_x_min && targetSpeed_x < 0) { // If switch hit and moving into switch direction
     currentPosition_x = 0;
     targetPosition_x = 0;
+    //currentSpeed_x = 0;
     Serial.println("Min switch X hit");
   }
 
@@ -174,13 +198,17 @@ void checkSwitches() {
 }
 
 void positionControl() {  
-  // X-axis no controller, max speed used
+  // X-axis P controller
   long error_x = targetPosition_x - currentPosition_x;
-  if(error_x == 0) {
-    targetSpeed_x = 0;
-  } else {
-    targetSpeed_x = error_x > 0 ? ZAXISSPEED : -ZAXISSPEED;
-  }
+  targetSpeed_x = error_x * CONTROLLER_P_X;
+
+  // Y-axis P controller
+  long error_y = targetPosition_y - currentPosition_y;
+  targetSpeed_y = error_y * CONTROLLER_P_Y;
+
+  // Z-axis P controller
+  long error_z = targetPosition_z - currentPosition_z;
+  targetSpeed_z = error_z * CONTROLLER_P_Z;
 
   // Print "ok" to serial if all axis are stable
   if(!reportedStable) {
@@ -237,7 +265,7 @@ ISR(TIMER2_COMPA_vect) {
   if(pc_x >= cmp_x) {
     pc_x = 0;
     
-    PORTE ^= 1 << _PULSE_X_N;
+    _PULSE_X_R ^= 1 << _PULSE_X_N;
 
     // Count pulses to determine current position of the Z axis
     currentPosition_x += currentDirection_x ? 1 : -1;
@@ -246,7 +274,7 @@ ISR(TIMER2_COMPA_vect) {
   if(pc_y >= cmp_y) {
     pc_y = 0;
     
-    PORTE ^= 1 << _PULSE_Y_N;
+    _PULSE_Y_R ^= 1 << _PULSE_Y_N;
 
     // Count pulses to determine current position of the Z axis
     currentPosition_y += currentDirection_y ? 1 : -1;
@@ -255,7 +283,7 @@ ISR(TIMER2_COMPA_vect) {
   if(pc_z >= cmp_z) {
     pc_z = 0;
     
-    PORTE ^= 1 << _PULSE_Z_N;
+    _PULSE_Z_R ^= 1 << _PULSE_Z_N;
 
     // Count pulses to determine current position of the Z axis
     currentPosition_z += currentDirection_z ? 1 : -1;
@@ -277,7 +305,7 @@ unsigned long speedToInterval(long currentSpeed) {
   const float base = 100000/2;
   int d = base/currentSpeed;
   
-  d = max(d, 25); // Minimum interval, max speed
+  d = max(d, 5); // Minimum interval, max speed
   d = min(d, 50000); // Maximum interval, min speed
 
   return d;
