@@ -47,6 +47,8 @@ void setup() {
   pinMode(_SPINDLE, OUTPUT);
   digitalWrite(_SPINDLE, LOW);
 
+  pinMode(_DOOR_SWITCH, INPUT_PULLUP);
+
   pinMode(_ES_MIN_X, INPUT_PULLUP);
   pinMode(_ES_MAX_X, INPUT_PULLUP);
   pinMode(_ES_MIN_Y, INPUT_PULLUP);

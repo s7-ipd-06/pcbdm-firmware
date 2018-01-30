@@ -15,13 +15,8 @@
 #define _SS_Y      10
 #define _SS_Z      4
 
-/* SPI
-MOSI                 51
-MISO                 50
-CLK                  52
-*/
-
 #define _SPINDLE      49
+#define _DOOR_SWITCH  11
 
 #define _ENC_X_A      18
 #define _ENC_X_B      19
