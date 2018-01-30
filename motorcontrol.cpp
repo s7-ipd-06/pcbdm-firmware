@@ -51,8 +51,8 @@ void initTimers() {
 volatile long currentPosition_x = 0;
 volatile long currentPosition_y = 0;
 volatile long currentPosition_z = 0;
-volatile long targetPosition_x = -10000;
-volatile long targetPosition_y = -10000;
+volatile long targetPosition_x = 3200; // 8 * 400
+volatile long targetPosition_y = 0;
 volatile long targetPosition_z = 0;
 
 long acceleration_x = 5;
@@ -63,7 +63,7 @@ long acceleration_z = 5;
 volatile long currentSpeed_x = 0;
 volatile long currentSpeed_y = 0;
 volatile long currentSpeed_z = 0;
-volatile long targetSpeed_x = 0;
+volatile long targetSpeed_x = 3200;
 volatile long targetSpeed_y = 0;
 volatile long targetSpeed_z = 0;
 volatile bool currentDirection_x = false;
@@ -86,16 +86,24 @@ volatile unsigned long pc_z;
 // Control loop that controls the speed (accelerates/decelerates) by altering the overflow values
 // Timer 1: 1 KHz
 ISR(TIMER1_COMPA_vect) {
+  //controlLoop(); 
+}
+
+void controlLoop() {
   // Check end switches and adjust speeds & position accordingly
-  checkSwitches();
+  //checkSwitches();
 
   // Position control by altering the speeds
-  positionControl();
+  //positionControl();
+  // Serial.print("currentPosition: "); Serial.println(currentPosition_x);
+  // Serial.print("targetPosition: "); Serial.println(currentPosition_x);
+  Serial.print("currentSpeed: "); Serial.println(currentSpeed_x);
+  Serial.print("targetSpeed: "); Serial.println(targetSpeed_x);
 
   // Change speed, accelerate/decelerate to reach target speed
   if(currentSpeed_x != targetSpeed_x) {
     bool speedChangeDirection = targetSpeed_x > currentSpeed_x;
-    bool accelerating = currentSpeed_x > 0 ? speedChangeDirection : -speedChangeDirection;
+    bool accelerating = speedChangeDirection ? currentSpeed_x >= 0 : currentPosition_x <= 0;
 
     long deltaSpeed = targetSpeed_x - currentSpeed_x;
     deltaSpeed = accelerating ? min(deltaSpeed, acceleration_x) : deltaSpeed; // Apply acceleration & no deceleration
@@ -105,70 +113,19 @@ ISR(TIMER1_COMPA_vect) {
 
     cmp_x = speedToInterval(currentSpeed_x);
 
-    bool newDirection = currentSpeed_x > 0;
+    bool newDirection = currentSpeed_x > 0; // true
 
     // Change direction if needed
-    if(currentDirection_x != newDirection) {
-      currentDirection_x = newDirection;
+    Serial.print("currentDirection: "); Serial.println(currentDirection_x);
+    Serial.print("newDirection: "); Serial.println(newDirection);
 
+    if(currentDirection_x != newDirection) { // true
+      currentDirection_x = newDirection;
+      //Serial.print("newDirection: "); Serial.println(newDirection);
       #if MOTOR_X_INVERT
         digitalWrite(_DIR_X, !newDirection);
       #else
         digitalWrite(_DIR_X, newDirection);
-      #endif
-    }
-  }
-
-  // Change speed, accelerate/decelerate to reach target speed
-  if(currentSpeed_y != targetSpeed_y) {
-    bool speedChangeDirection = targetSpeed_y > currentSpeed_y;
-    bool accelerating = currentSpeed_y > 0 ? speedChangeDirection : -speedChangeDirection;
-
-    long deltaSpeed = targetSpeed_y - currentSpeed_y;
-    deltaSpeed = accelerating ? min(deltaSpeed, acceleration_y) : deltaSpeed; // Apply acceleration & no deceleration
-
-    // Add the change in speed to the current speed
-    currentSpeed_y += (targetSpeed_y > currentSpeed_y ? deltaSpeed : -deltaSpeed);
-
-    cmp_y = speedToInterval(currentSpeed_y);
-
-    bool newDirection = currentSpeed_y > 0;
-
-    // Change direction if needed
-    if(currentDirection_y != newDirection) {
-      currentDirection_y = newDirection;
-      
-      #if MOTOR_Y_INVERT
-        digitalWrite(_DIR_Y, !newDirection);
-      #else
-        digitalWrite(_DIR_Y, newDirection);
-      #endif
-    }
-  }
-
-  // Change speed, accelerate/decelerate to reach target speed
-  if(currentSpeed_z != targetSpeed_z) {
-    bool speedChangeDirection = targetSpeed_z > currentSpeed_z;
-    bool accelerating = currentSpeed_z > 0 ? speedChangeDirection : -speedChangeDirection;
-
-    long deltaSpeed = targetSpeed_z - currentSpeed_z;
-    deltaSpeed = accelerating ? min(deltaSpeed, acceleration_z) : deltaSpeed; // Apply acceleration & no deceleration
-
-    // Add the change in speed to the current speed
-    currentSpeed_z += (targetSpeed_z > currentSpeed_z ? deltaSpeed : -deltaSpeed);
-
-    cmp_z = speedToInterval(currentSpeed_z);
-
-    bool newDirection = currentSpeed_z > 0;
-
-    // Change direction if needed
-    if(currentDirection_z != newDirection) {
-      currentDirection_z = newDirection;
-      
-      #if MOTOR_Z_INVERT
-        digitalWrite(_DIR_Z, !newDirection);
-      #else
-        digitalWrite(_DIR_Z, newDirection);
       #endif
     }
   }
@@ -217,8 +174,24 @@ void checkSwitches() {
 }
 
 void positionControl() {  
-  // X-axis P-controller
+  // X-axis no controller, max speed used
   long error_x = targetPosition_x - currentPosition_x;
+  if(error_x == 0) {
+    targetSpeed_x = 0;
+  } else {
+    targetSpeed_x = error_x > 0 ? ZAXISSPEED : -ZAXISSPEED;
+  }
+
+  // Print "ok" to serial if all axis are stable
+  if(!reportedStable) {
+    if(error_x == 0) {
+      Serial.println("ok");
+      reportedStable = true;
+    }
+  }
+
+  // X-axis P-controller
+  /*long error_x = targetPosition_x - currentPosition_x;
   targetSpeed_x = error_x * CONTROLLER_P_X;
   if(error_x <= STABLE_MAX_ERROR) {
     if(stable_x < STABLECHECKS) stable_x++;
@@ -255,7 +228,7 @@ void positionControl() {
       Serial.println("ok");
       reportedStable = true;
     }
-  }
+  }*/
 }
 
 // Pulse motors on pulse counter overflow

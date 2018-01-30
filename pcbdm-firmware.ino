@@ -2,7 +2,6 @@
 
 // Include declarations of functions that are used in this file
 #include "commands.h"
-#include "encoders.h"
 #include "motorcontrol.h"
 
 // External libraries
@@ -38,6 +37,10 @@ void initDrivers() {
   stepper_Z.setCurrentMilliamps(300);
   stepper_Z.setStepMode(8);
   stepper_Z.enableDriver();
+
+  pinMode(_DIR_X, OUTPUT);
+  pinMode(_DIR_Y, OUTPUT);
+  pinMode(_DIR_Z, OUTPUT);
 }
 
 void setup() {
@@ -59,7 +62,6 @@ void setup() {
   delay(5000);
   
   initTimers();
-  initEncoders();
   initDrivers();
   
   Serial.println("Ready");
@@ -72,6 +74,8 @@ unsigned int buffI;
 boolean endStr = false;
 
 void loop() {
+  controlLoop();
+
   // Read serialport
   if(Serial.available()) {
     char chr = Serial.read();

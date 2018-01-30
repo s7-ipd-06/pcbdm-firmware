@@ -6,6 +6,7 @@ void initTimers();
 
 // Private function declarations
 unsigned long speedToInterval(long currentSpeed);
+void controlLoop();
 void checkSwitches();
 void positionControl();
 
